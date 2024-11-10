@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1061639669011",
+    "project_id": "calendar-countdown-9eddf",
+    "storage_bucket": "calendar-countdown-9eddf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1061639669011:android:67039dc0144bef363886e6",
+        "android_client_info": {
+          "package_name": "com.masonzen.calendar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASIoga_a_LfGf426Fmd5VGaGjw5pR9PWY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
