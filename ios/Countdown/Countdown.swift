@@ -10,9 +10,10 @@ import SwiftUI
 
 struct Provider: TimelineProvider {
     var _counter = 0
+    var errorCountdown = CountdownEntry(date: Date.distantPast, interval: "-1", name: "error", isReverse: false)
     
     func placeholder(in context: Context) -> CountdownEntry {
-        CountdownEntry(date: Date(), emoji: "😀", counter: 0, interval: "NA")
+        CountdownEntry(date: Date(), interval: "12d", name: "Birthday", isReverse: false)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (CountdownEntry) -> ()) {
@@ -25,24 +26,36 @@ struct Provider: TimelineProvider {
             let userDefaults = UserDefaults(suiteName: "group.masonzen.countdown")
             if let userDefaults = userDefaults {
                 let formatter = DateFormatter()
-                let dateString = userDefaults.value(forKey: "countdown_date") as? String
+                let dateString = userDefaults.value(forKey: "countdown_date") as? String ?? "null"
+                let dateName = userDefaults.value(forKey: "countdown_name") as? String ?? ""
                 
-                formatter.dateFormat = "yyyy-MM-dd hh:mm:ss.000"
-                formatter.timeZone = TimeZone(secondsFromGMT: 0)
-                var date = formatter.date(from: dateString ?? "")
+                formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+                formatter.timeZone = TimeZone.current
+                print(String(dateString.prefix(19)))
+                let date = formatter.date(from: String(dateString.prefix(19)))
+                
+                guard let date = date else {return completion(errorCountdown)}
+                
+                var isReverse = false
+                if date < .now {isReverse = true}
                 
                 let datecom = DateComponentsFormatter()
                 datecom.allowedUnits = [.day, .hour, .minute]
                 datecom.unitsStyle = .abbreviated
-                let interval = datecom.string(from: .now, to: date ?? .now)
-                print("int: ", interval ?? "NA")
+                var interval = datecom.string(from: .now, to: date) ?? "..."
+                let diff = isReverse ?
+                    Calendar.current.dateComponents([.day, .hour, .minute], from: date, to: .now) :
+                    Calendar.current.dateComponents([.day, .hour, .minute], from: .now, to: date)
                 
-//                let interval = userDefaults.value(forKey: "countdown_interval") as? String
+                if let day = diff.day, let hour = diff.hour, let minute = diff.minute {
+                    interval = "\(day)d \(hour)h \(minute)m"
+                }
                 
-                print("the number is", date ?? "null")
-                print(interval ?? "NA")
-                let counter = userDefaults.value(forKey: "countdown_counter") as? Int
-                entry = CountdownEntry(date: date ?? .now, emoji: "non", counter: counter ?? 0, interval: interval ?? "0d 0h 0m")
+                print("received dateString: ", dateString)
+                print("received date: ", date)
+                print("received interval: ", interval)
+                
+                entry = CountdownEntry(date: date, interval: interval, name: dateName, isReverse: isReverse)
             }
         }
         
@@ -50,19 +63,6 @@ struct Provider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-//        var entries: [CountdownEntry] = []
-//
-//        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
-//        let currentDate = Date()
-//        for hourOffset in 0 ..< 5 {
-//            
-//            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-//            let entry = CountdownEntry(date: entryDate, emoji: "😀", counter: 5)
-//            entries.append(entry)
-//        }
-//
-//        let timeline = Timeline(entries: entries, policy: .atEnd)
-//        completion(timeline)
         print("updating widget")
         getSnapshot(in: context) { (entry) in
        // atEnd policy tells widgetkit to request a new entry after the date has passed
@@ -74,27 +74,43 @@ struct Provider: TimelineProvider {
 
 struct CountdownEntry: TimelineEntry {
     let date: Date
-    let emoji: String
-    let counter: Int
     let interval: String
+    let name: String
+    let isReverse: Bool
+}
+
+struct SmallInfoText : View {
+    let text: String
+    
+    var body : some View {
+        Text(text).font(.system(size: 8))
+    }
 }
 
 struct CountdownEntryView : View {
     var entry: Provider.Entry
+    
+    @Environment(\.widgetFamily) var family
 
     var body: some View {
-        VStack {
-            Text("Time:")
-            Text(entry.date, style: .date)
-
-//            Text("Emoji:")
-//            Text(entry.emoji)
-            
-//            Text("Counter")
-//            Text("\(entry.counter)")
-            
-            Text("Interval")
+        
+        switch (family) {
+        case .systemSmall, .systemMedium:
+            VStack {
+                entry.isReverse ?
+                SmallInfoText(text: "Since") :
+                SmallInfoText(text: "To:")
+                Text(entry.name)
+                Text(entry.date, style: .date)
+                
+                SmallInfoText(text: "Interval")
+                Text(entry.interval).font(.title)
+            }
+        case .accessoryCircular:
             Text(entry.interval)
+        default:
+            EmptyView()
+                
         }
     }
 }
@@ -115,12 +131,15 @@ struct Countdown: Widget {
         }
         .configurationDisplayName("Countdown Widget")
         .description("This is an example widget.")
+        .supportedFamilies([
+            .systemSmall, .systemMedium, .accessoryCircular
+        ])
     }
 }
 
-#Preview(as: .systemSmall) {
-    Countdown()
-} timeline: {
-    CountdownEntry(date: .now, emoji: "😀", counter: 2, interval: "NA")
-    CountdownEntry(date: .now, emoji: "🤩", counter: 3, interval: "NA2")
-}
+//#Preview(as: .systemSmall) {
+//    Countdown()
+//} timeline: {
+//    CountdownEntry(date: .now, interval: "NA", name: "first")
+//    CountdownEntry(date: .now, interval: "NA2", name: "second")
+//}

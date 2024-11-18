@@ -40,6 +40,10 @@ dependencies:
   shared_preferences: ^2.2.3
   flutter_riverpod: ^2.4.9
   riverpod_annotation: ^2.3.3
+  hooks_riverpod: ^2.6.1
+  uuid: ^4.3.3
+  collection: ^1.18.0
+  # workmanager: ^0.5.2
 
 dev_dependencies:
   flutter_test:

@@ -1,11 +1,12 @@
+import 'package:calendar/screens/date_calculation_page.dart';
+import 'package:calendar/utils/storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:calendar/pages/date_page.dart';
-import 'package:calendar/providers/date_provider.dart';
-import 'package:calendar/utils/const.dart';
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:calendar/pages/front_page.dart';
+import 'package:flutter/cupertino.dart';
 
 void main() {
+  // Workmanager().initialize(callbackDispatcher, isInDebugMode: kDebugMode);
   runApp(
     const ProviderScope(
       child: MyApp(),
@@ -13,33 +14,38 @@ void main() {
   );
 }
 
-Future<void> initState() async {
-  final pref = await SharedPreferences.getInstance();
-  final String? targetDateString = pref.getString(targetDateConfig);
 
-  if (targetDateString != null) {
-    DateTime targetDate = DateTime.parse(targetDateString);
-    DateNotifier().setTargetDate(targetDate);
-  } 
-}
+// @pragma("vm:entry-point")
+// void callbackDispatcher() async {
+  
+// }
 
+// @pragma("vm:entry-point")
+// void interactiveCallback(Uri? data) {
+
+// }
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  void init() {
+    print("initing page");
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    init();
+    return const CupertinoApp(
       title: 'Calendar',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+      theme: CupertinoThemeData(
+        primaryColor: CupertinoColors.activeBlue,
+        brightness: Brightness.light,
       ),
-      home: const MyHomePage(title: 'Countdown Calendar'),
+      home: MyHomePage(title: 'Countdown Calendar'),
       debugShowCheckedModeBanner: false,
     );
   }
 }
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
   final String title;
@@ -49,21 +55,56 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  void handleFloatButtonOnPress() {}
+  void _showDateSelection() async {
+    final result = await Navigator.of(context).push(
+      CupertinoPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => const DateCalculationPage(),
+      ),
+    );
+    
+    if (result != null) {
+      final selectedDate = result['date'] as DateTime;
+      final selectedNumber = result['number'] as int;
+      // Handle the selection
+      // You can update your state or provider here
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: Text(widget.title),
       ),
-      body: const DatePage(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: handleFloatButtonOnPress,
-        tooltip: 'Press',
-        child: const Icon(Icons.camera),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      child: Stack(
+        children: [
+          // Add safe area to prevent content from going under the navigation bar
+          SafeArea(
+            child: DatePage(),
+          ),
+          // Position the button at the bottom right
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: GestureDetector(
+              onTap: _showDateSelection,
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: CupertinoColors.activeBlue,
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: const Icon(
+                  CupertinoIcons.calendar_badge_plus,
+                  color: CupertinoColors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
