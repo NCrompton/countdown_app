@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:calendar/model/countdown_data.dart';
+import 'package:calendar/model/duration_component.dart';
 import 'package:calendar/providers/date_provider.dart';
 import 'package:calendar/screens/date_list.dart';
+import 'package:calendar/utils/date_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,7 +18,7 @@ class FrontPageInfo extends ConsumerStatefulWidget {
 }
 
 class FrontPageInfoState extends ConsumerState<FrontPageInfo> {
-  Duration diffDate = Duration();
+  DurationComponent diffDate = DurationComponent(duration: Duration());
   String diffDateString = "";
   CountdownData? targetDate;
   bool isTargetBeforeNow = false;
@@ -41,12 +43,10 @@ class FrontPageInfoState extends ConsumerState<FrontPageInfo> {
       now = DateTime.now();
       isTargetBeforeNow = targetDate!.date.isBefore(now);
       
-      diffDate = (isTargetBeforeNow) ? 
-        now.difference(targetDate!.date) :
-        targetDate!.date.difference(now);
+      diffDate = targetDate!.date.standardDifferenceFromNow(now);
       
       diffDateString =
-          "${f.format(diffDate.inHours.remainder(24))}:${f.format(diffDate.inMinutes.remainder(60))}:${(f.format(diffDate.inSeconds.remainder(60)))}";
+          "${f.format(diffDate.hours)}:${f.format(diffDate.minutes)}:${(f.format(diffDate.seconds))}";
     });
   }
 
@@ -63,7 +63,7 @@ class FrontPageInfoState extends ConsumerState<FrontPageInfo> {
           Text(
             "Date ${isTargetBeforeNow ? "Since" : "To"} ${dateState.value?.targetDate.toString()}",
           ),
-          Text("${diffDate.inDays} Days"),
+          Text("${diffDate.duration.inDays} Days"),
           Text(diffDateString),
           CupertinoButton.filled(
             onPressed: () {

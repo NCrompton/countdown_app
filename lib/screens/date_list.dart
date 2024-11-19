@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:calendar/components/date_list_cell.dart';
 import 'package:calendar/controllers/date_controller.dart';
 import 'package:calendar/controllers/view_provider.dart';
 import 'package:calendar/layout/floating_bottom_drawer.dart';
@@ -90,31 +91,17 @@ class _DateListPageState extends ConsumerState<DateListPage> with SingleTickerPr
                 ),
                 SliverToBoxAdapter(
                   child: (dates == null || dates.isEmpty) 
-                    ? Text("dates: $dates") 
+                    ? const SizedBox() 
                     : CupertinoListSection(
                         children: dates.map((countdownData) {
                           return Builder(
                             builder: (context) {
-                              return CupertinoListTile(
-                                key: Key(countdownData.id),
-                                leading: Hero(
-                                  tag: 'countdown-${countdownData.id}',
-                                  child: IconButton(
-                                    onPressed: () => _updateTargetWidget(countdownData),
-                                    icon: Icon(
-                                      countdownData.id == targetDateId ? CupertinoIcons.check_mark : CupertinoIcons.clock,
-                                      color: CupertinoColors.systemBlue,
-                                    )
-                                  ),
-                                ),
-                                title: Text(countdownData.toString()),
-                                subtitle: Text(countdownData.date.toLocal().toString()),
-                                trailing: const CupertinoListTileChevron(),
+                              return DateListCell(
                                 onTap: () {
-                                  CountdownDateDetail countdownScreen = CountdownDateDetail(countdown: countdownData);
-                                  // openPageInner(context, countdownScreen);
-                                  openPageSide(context, countdownScreen);
+                                  openPageSide(context, CountdownDateDetail(countdown: countdownData));
                                 },
+                                data: countdownData, 
+                                isTarget: (countdownData.id == targetDateId),
                               );
                             },
                           );

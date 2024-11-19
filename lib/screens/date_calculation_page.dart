@@ -120,10 +120,10 @@ class _DateSelectionPageState extends ConsumerState<DateCalculationPage> {
               ),
             ),
           ),
-          SizedBox(width: 6,),
+          const SizedBox(width: 6,),
           Container(
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(90, 0, 123, 255),
+            decoration: const BoxDecoration(
+              color: Color.fromARGB(90, 0, 123, 255),
               borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
             child: IconButton(

@@ -18,11 +18,13 @@ class AddDatePage extends ConsumerStatefulWidget {
 
 class _AddDatePageState extends ConsumerState<AddDatePage> {
   final TextEditingController _nameController = TextEditingController();
-  late DateTime _selectedDate = widget.date ?? DateTime.now();
+  late DateTime _selectedDate;
 
   @override
   initState() {
     super.initState();
+
+    _selectedDate = widget.date ?? DateTime.now();
   }
 
   @override
@@ -97,7 +99,6 @@ class _AddDatePageState extends ConsumerState<AddDatePage> {
 
   @override
   Widget build(BuildContext context) {
-    _selectedDate = widget.date ?? DateTime.now();
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
