@@ -47,6 +47,7 @@ fun parseIntervalFormat(interval: Duration, intervalFormat: String): String {
     val includeDay = intervalFormat.contains("d", ignoreCase = true)
     val includeHour = intervalFormat.contains("h", ignoreCase = true)
     val includeMinute = intervalFormat.contains("m", ignoreCase = true)
+    val includeSecond = intervalFormat.contains("s", ignoreCase = true)
 
     var resultString = ""
     var daysNum = interval.toDays()
@@ -54,15 +55,19 @@ fun parseIntervalFormat(interval: Duration, intervalFormat: String): String {
     if (includeDay && !includeHour && !includeMinute) {
         resultString += interval.toDays().toString()
     } else if (includeDay) {
-        resultString += interval.toDays().toString() + "D"
+        resultString += interval.toDays().toString() + "d "
     }
 
     if (includeHour) {
-        resultString += interval.minusDays(interval.toDays()).toString() + "m"
+        resultString += interval.minusDays(interval.toDays()).toHours().toString() + "h "
     }
 
     if (includeMinute) {
-        resultString += interval.minusHours(interval.toHours()).toString() + "s"
+        resultString += interval.minusHours(interval.toHours()).toMinutes().toString() + "m "
+    }
+
+    if (includeSecond) {
+//        resultString += interval.minusMinutes(interval.toMinutes()).toSeconds().toString() + "s "
     }
 
     return resultString

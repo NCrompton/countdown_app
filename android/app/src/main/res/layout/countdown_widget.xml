@@ -15,23 +15,30 @@
             android:id="@+id/date_name_prefix"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:textSize="11sp" />
 
         <TextView
             android:id="@+id/date_name"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            tools:text="Event" />
 
         <TextView
             android:id="@+id/date_as_string"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             tools:text="@tools:sample/date/ddmmyy" />
 
         <TextView
             android:id="@+id/interval_prefix"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
             android:text="@string/interval_prefix"
             android:textSize="11sp" />
 
