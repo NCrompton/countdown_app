@@ -4,7 +4,7 @@
     <application
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:label="calendar">
+        android:label="A Calendar">
         <receiver
             android:name=".CountdownWidget"
             android:exported="false">

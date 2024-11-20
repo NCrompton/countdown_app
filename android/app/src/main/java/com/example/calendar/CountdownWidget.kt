@@ -1,8 +1,10 @@
 package com.example.calendar
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
+import android.content.Intent
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
 import java.time.Duration
@@ -81,6 +83,10 @@ internal fun updateAppWidget(
     val widgetData = HomeWidgetPlugin.getData(context)
     val standardTimeFormat = context.getString(R.string.standard_datetime_format)
     val standardIntervalFormat = context.getString(R.string.standard_interval_format)
+    val pendingIntent = PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java),
+        PendingIntent.FLAG_IMMUTABLE)
+
+
     val views = RemoteViews(context.packageName, R.layout.countdown_widget).apply {
         var dateString = widgetData.getString("countdown_date", null)
         val preferredTimeFormat = widgetData.getString("preferred_time_format", null).takeIf { it != null } ?: standardTimeFormat
@@ -97,6 +103,8 @@ internal fun updateAppWidget(
             Duration.between(LocalDateTime.now(), date)
 
         val intervalString = parseIntervalFormat(interval, preferredIntervalFormat)
+
+        setOnClickPendingIntent(R.id.widget_box, pendingIntent)
 
         setTextViewText(R.id.date_as_string, dateString)
         setTextViewText(R.id.date_name, dateName)
