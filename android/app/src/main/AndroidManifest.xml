@@ -7,7 +7,7 @@
         android:label="A Calendar">
         <receiver
             android:name=".CountdownWidget"
-            android:exported="false">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

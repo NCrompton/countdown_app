@@ -5,13 +5,23 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.util.SizeF
 import android.widget.RemoteViews
+
 import es.antonborri.home_widget.HomeWidgetPlugin
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+
 //import kotlin.time.Duration
 
+//import androidx.compose.runtime.Composable
+//import androidx.glance.text.Text
+//import androidx.glance.GlanceId
+//
+//import androidx.glance.appwidget.GlanceAppWidget
+//import androidx.glance.appwidget.GlanceAppWidgetReceiver
+//import androidx.glance.appwidget.provideContent
 /**
  * Implementation of App Widget functionality.
  */
@@ -83,11 +93,11 @@ internal fun updateAppWidget(
     val widgetData = HomeWidgetPlugin.getData(context)
     val standardTimeFormat = context.getString(R.string.standard_datetime_format)
     val standardIntervalFormat = context.getString(R.string.standard_interval_format)
+    val standardIntervalFormatTiny = context.getString(R.string.standard_interval_format_tiny)
     val pendingIntent = PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java),
         PendingIntent.FLAG_IMMUTABLE)
 
-
-    val views = RemoteViews(context.packageName, R.layout.countdown_widget).apply {
+    val wideViews = RemoteViews(context.packageName, R.layout.countdown_widget).apply {
         var dateString = widgetData.getString("countdown_date", null)
         val preferredTimeFormat = widgetData.getString("preferred_time_format", null).takeIf { it != null } ?: standardTimeFormat
         val preferredIntervalFormat = widgetData.getString("preferred_interval_format", null).takeIf { it != null } ?: standardIntervalFormat
@@ -111,5 +121,82 @@ internal fun updateAppWidget(
         setTextViewText(R.id.date_name_prefix, dateNamePrefix)
         setTextViewText(R.id.interval_string, intervalString)
     }
-    appWidgetManager.updateAppWidget(appWidgetId, views)
+
+    val narrowViews = RemoteViews(context.packageName, R.layout.countdown_widget_narrow).apply {
+        var dateString = widgetData.getString("countdown_date", null)
+        val preferredTimeFormat = widgetData.getString("preferred_time_format", null).takeIf { it != null } ?: standardTimeFormat
+        val preferredIntervalFormat = widgetData.getString("preferred_interval_format", null).takeIf { it != null } ?: standardIntervalFormat
+        val date = LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern(standardTimeFormat))
+        dateString = formatLocalDateTime(date, preferredTimeFormat)
+
+        val dateName = widgetData.getString("countdown_name", null)
+
+        val dateNamePrefix = if (date.isBefore(LocalDateTime.now())) "Since" else "To"
+
+        val interval = if (date.isBefore(LocalDateTime.now()))
+            Duration.between(date, LocalDateTime.now()) else
+            Duration.between(LocalDateTime.now(), date)
+
+        val intervalString = parseIntervalFormat(interval, preferredIntervalFormat)
+
+        setOnClickPendingIntent(R.id.widget_box, pendingIntent)
+
+        setTextViewText(R.id.date_as_string, "dateString")
+        setTextViewText(R.id.date_name, dateName)
+        setTextViewText(R.id.date_name_prefix, dateNamePrefix)
+        setTextViewText(R.id.interval_string, intervalString)
+    }
+
+    val tinyViews = RemoteViews(context.packageName, R.layout.countdown_widget_tiny).apply {
+        val dateString = widgetData.getString("countdown_date", null)
+        val preferredIntervalFormat = widgetData.getString("preferred_interval_format", null).takeIf { it != null } ?: standardIntervalFormatTiny
+        val date = LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern(standardTimeFormat))
+
+        val interval = if (date.isBefore(LocalDateTime.now()))
+            Duration.between(date, LocalDateTime.now()) else
+            Duration.between(LocalDateTime.now(), date)
+
+        val intervalString = parseIntervalFormat(interval, preferredIntervalFormat)
+
+        setOnClickPendingIntent(R.id.widget_box, pendingIntent)
+
+        setTextViewText(R.id.interval_string, intervalString)
+    }
+
+    var remoteView: RemoteViews
+
+    if (android.os.Build.VERSION.SDK_INT >= 31) {
+
+        val viewMapping: Map<SizeF, RemoteViews> = mapOf(
+            SizeF(150f, 150f) to narrowViews,
+            SizeF(215f, 100f) to wideViews,
+            SizeF(150f, 100f) to tinyViews,
+        )
+        remoteView = RemoteViews(viewMapping)
+
+    } else {
+        remoteView = wideViews
+    }
+
+    appWidgetManager.updateAppWidget(appWidgetId, remoteView)
 }
+
+//
+//class CountdownWidgetReceiver : GlanceAppWidgetReceiver() {
+//    override val glanceAppWidget: GlanceAppWidget = CountdownWidget()
+//}
+//
+//class CountdownWidget : GlanceAppWidget() {
+//
+//    override suspend fun provideGlance(context: Context, id: GlanceId) {
+//        provideContent {
+//            CountdownContent()
+//        }
+//    }
+//
+//    @Composable
+//    private fun CountdownContent() {
+//        Text("5")
+//    }
+//}
+

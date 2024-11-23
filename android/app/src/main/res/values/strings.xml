@@ -5,5 +5,9 @@
     <string name="app_widget_description">This is an app widget description</string>
     <string name="interval_prefix">Date</string>
     <string name="standard_interval_format">DHM</string>
+    <string name="standard_interval_format_tiny">D</string>
     <string name="standard_datetime_format">yyyy-MM-dd HH:mm:ss</string>
+    <string name="date_count_placeholder_tiny">100</string>
+    <string name="date_count_placeholder">10d 20h 34m</string>
+    <string name="date_name_placeholder">2024-11-23</string>
 </resources>

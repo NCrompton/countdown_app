@@ -3,6 +3,7 @@ plugins {
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
     id 'com.google.gms.google-services'
+//    id "org.jetbrains.kotlin.plugin.compose" version "2.0.0"
 }
 
 def localProperties = new Properties()
@@ -27,6 +28,7 @@ android {
     namespace "com.example.calendar"
     compileSdkVersion 34
     ndkVersion flutter.ndkVersion
+//    ndkVersion "25.1.8937393"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -61,7 +63,12 @@ android {
     }
     buildFeatures {
         viewBinding true
+//        compose true
     }
+//
+//    composeOptions {
+//        kotlinCompilerExtensionVersion = "1.5.15"
+//    }
 }
 
 flutter {
@@ -69,6 +76,8 @@ flutter {
 }
 
 dependencies {
-    implementation platform('com.google.firebase:firebase-bom:33.1.1')
+    implementation platform('com.google.firebase:firebase-bom:33.6.0')
     implementation 'com.google.firebase:firebase-analytics'
+//    implementation "androidx.glance:glance:1.1.1"
+//    implementation 'androidx.glance:glance-appwidget:1.1.1'
 }
