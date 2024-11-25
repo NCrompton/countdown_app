@@ -24,10 +24,15 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+def flutterNdkVersion = localProperties.getProperty('flutter.ndkVersion')
+if (flutterNdkVersion == null) {
+    flutterNdkVersion = '25.1.8937393'
+}
+
 android {
     namespace "com.example.calendar"
     compileSdkVersion 34
-    ndkVersion flutter.ndkVersion
+    ndkVersion flutterNdkVersion
 //    ndkVersion "25.1.8937393"
 
     compileOptions {
