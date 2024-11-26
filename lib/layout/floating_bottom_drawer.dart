@@ -39,7 +39,6 @@ class FloatingBottomDrawerState extends State<FloatingBottomDrawer> {
             onVerticalDragEnd: (details) {
               if (details.primaryVelocity! > 0) {  // Dragging down
                 widget.visibilityController.setVisibility(false);
-                print(widget.visibilityController.visible);
               }
             },
             child: Container(

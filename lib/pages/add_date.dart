@@ -7,10 +7,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AddDatePage extends ConsumerStatefulWidget {
   final DateTime? date;
+  final Function? dismiss;
   
   const AddDatePage({
     super.key,
     this.date,
+    this.dismiss,
    });
 
   @override
@@ -88,7 +90,7 @@ class _AddDatePageState extends ConsumerState<AddDatePage> {
     );
   }
 
-  void _submitForm() {
+  void _submitForm(bool _isTargetDateEmpty) {
     if (_nameController.text.isEmpty) {
       showCupertinoDialog(
         context: context,
@@ -112,7 +114,37 @@ class _AddDatePageState extends ConsumerState<AddDatePage> {
     );
 
     ref.read(asyncDateStateProvider.notifier).addDate(newEvent);
+
+    if (_isTargetDateEmpty) {
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('Target Date'),
+          content: const Text('Do you want to set target date as new event'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () {
+                _addToTarget(newEvent);
+                Navigator.pop(context);
+              },
+            ),
+            CupertinoDialogAction(
+              child: const Text('NO'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+    }
     _resetState();
+    
+    if (widget.dismiss == null) return;
+    widget.dismiss!();
+  }
+
+  void _addToTarget(CountdownData newEvent) {
+    ref.read(asyncDateStateProvider.notifier).setTargetDate(newEvent.id);
   }
 
   void _resetState() {
@@ -131,6 +163,7 @@ class _AddDatePageState extends ConsumerState<AddDatePage> {
 
   @override
   Widget build(BuildContext context) {
+    bool _isTargetDateEmpty = ref.watch(asyncDateStateProvider.select((state) => state.value?.targetDate == null));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -216,7 +249,7 @@ class _AddDatePageState extends ConsumerState<AddDatePage> {
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: CupertinoButton.filled(
-            onPressed: _submitForm,
+            onPressed: () => _submitForm(_isTargetDateEmpty),
             child: const Text('Add Event'),
           ),
         ),

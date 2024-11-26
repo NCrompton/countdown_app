@@ -74,18 +74,27 @@ class AsyncDateState extends _$AsyncDateState {
     return targetDate;
   }
 
-  Future<void> setTargetDate(CountdownData targetDate) async{
+  Future<bool> setTargetDate(String targetDateId) async{
+    final targetDate = await getDateById(targetDateId);
+    if (targetDate == null) return false; 
+
     manager?.setTargetDate(targetDate);
 
     nativeWidgetManager.updateWidget(targetDate.date, targetDate.toString());
 
     final data = await _fetchAll();
     state = AsyncValue.data(data);
+    return true;
+  }
+
+  Future<void> removeTargetDate() async {
+    manager?.setTargetDate(null);
+
+    nativeWidgetManager.resetWidget();
   }
 
   Future<void> addDate(CountdownData data) async {
     state = const AsyncValue.loading();
-    print("will add");
     state = await AsyncValue.guard(() async {
       final dateList = await _fetchDateList();
       final updatedList = [...dateList, data];
@@ -98,6 +107,10 @@ class AsyncDateState extends _$AsyncDateState {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final dateList = await _fetchDateList();
+      final targetDate = await _fetchTargetDate();
+
+      if (targetDate?.id == id) removeTargetDate();
+
       final updatedList = [...dateList]..removeWhere(
         (d) => d.id == id
       );

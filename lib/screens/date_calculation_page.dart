@@ -91,7 +91,7 @@ class _DateSelectionPageState extends ConsumerState<DateCalculationPage> {
           ),
           FloatingBottomDrawer(
             visibilityController: _visibilityController,
-            child: AddDatePage(date: _dateController.result), 
+            child: AddDatePage(date: _dateController.result, dismiss: () => _visibilityController.setVisibility(false)), 
           ),
           ]);
   }

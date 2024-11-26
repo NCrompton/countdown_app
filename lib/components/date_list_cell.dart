@@ -58,7 +58,7 @@ class DateListCellState extends ConsumerState<DateListCell> {
   }
 
   void _setAsTargetDate() {
-    ref.read(asyncDateStateProvider.notifier).setTargetDate(widget.data);
+    ref.read(asyncDateStateProvider.notifier).setTargetDate(widget.data.id);
   }
 
   @override

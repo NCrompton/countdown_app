@@ -49,10 +49,6 @@ class _DateListPageState extends ConsumerState<DateListPage> with SingleTickerPr
     });
   }
 
-  void _updateTargetWidget(CountdownData newTarget) {
-    ref.read(provider.notifier).setTargetDate(newTarget);
-  }
-
   @override
   Widget build(BuildContext context) {
     final dateState = ref.watch(asyncDateStateProvider);
@@ -115,7 +111,7 @@ class _DateListPageState extends ConsumerState<DateListPage> with SingleTickerPr
             ),
             FloatingBottomDrawer(
               visibilityController: _visibilityController,
-              child: const AddDatePage(), 
+              child: AddDatePage(dismiss: () => _visibilityController.setVisibility(false)), 
             ),
           ],
         ),

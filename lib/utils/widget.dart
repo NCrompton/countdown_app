@@ -35,4 +35,14 @@ class NativeWidgetManager {
         qualifiedAndroidName: fullAndroidWidgetName,
       );
   }
+
+  void resetWidget() {
+    setWidgetDate(DateTime.now());
+    setWidgetDateName("");
+    HomeWidget.updateWidget(
+      iOSName: iOSWidgetName,
+      androidName: androidWidgetName,
+      qualifiedAndroidName: fullAndroidWidgetName,
+    );
+  }
 }

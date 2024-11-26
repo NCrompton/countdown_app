@@ -51,7 +51,9 @@ class LocalStorageManager {
     _pref.setStringList(dateListConfig, dateListString);
   }
 
-  Future<void> setTargetDate(CountdownData targetDate) async {
+  Future<void> setTargetDate(CountdownData? targetDate) async {
+    if (targetDate == null) return _pref.remove(targetDateConfig);
+    
     final targetDateString = jsonEncode(targetDate.toJson());
     _pref.setString(targetDateConfig, targetDateString);
   }
