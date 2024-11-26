@@ -23,25 +23,25 @@ class _DateSelectionPageState extends ConsumerState<DateCalculationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      resizeToAvoidBottomInset: false,
-      navigationBar: CupertinoNavigationBar(
-        middle: const Text("Date Calculator"),
-        leading: CupertinoButton(
-          padding: EdgeInsets.zero,
-          child: const Text('Cancel'),
-          onPressed: () => Navigator.of(context).pop(),
+    return GestureDetector(
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: CupertinoPageScaffold(
+        resizeToAvoidBottomInset: false,
+        navigationBar: CupertinoNavigationBar(
+          middle: const Text("Date Calculator"),
+          leading: CupertinoButton(
+            padding: EdgeInsets.zero,
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ),
-      ),
-      child: SafeArea(
-        child: GestureDetector(
-          onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+        child: SafeArea(
           child: ListenableBuilder(listenable: _dateController, builder: (BuildContext context, Widget? child){ 
             return ListenableBuilder(listenable: _visibilityController, builder: (BuildContext context, Widget? child){ 
               return _mainBody(context);
             });
           }),
-      )
+        )
       ),
     );
   }
@@ -141,7 +141,7 @@ class _DateSelectionPageState extends ConsumerState<DateCalculationPage> {
       children: [
         Expanded(
           child: CupertinoDatePicker(
-            mode: CupertinoDatePickerMode.dateAndTime,
+            mode: CupertinoDatePickerMode.date,
             initialDateTime: _dateController.date,
             onDateTimeChanged: (date) {
               setState(() {

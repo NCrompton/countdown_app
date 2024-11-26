@@ -2,6 +2,7 @@ import 'package:calendar/model/countdown_data.dart';
 import 'package:calendar/providers/date_provider.dart';
 import 'package:calendar/utils/date_util.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AddDatePage extends ConsumerStatefulWidget {
@@ -18,13 +19,20 @@ class AddDatePage extends ConsumerStatefulWidget {
 
 class _AddDatePageState extends ConsumerState<AddDatePage> {
   final TextEditingController _nameController = TextEditingController();
+  bool _showTimePicker = false;
   late DateTime _selectedDate;
 
   @override
   initState() {
     super.initState();
 
-    _selectedDate = widget.date ?? DateTime.now();
+    if (widget.date == null) {
+      final now = DateTime.now(); 
+      _selectedDate = DateTime(now.year, now.month, now.day);
+    } else {
+      _showTimePicker = true;
+      _selectedDate = widget.date!;
+    }
   }
 
   @override
@@ -33,7 +41,7 @@ class _AddDatePageState extends ConsumerState<AddDatePage> {
     super.dispose();
   }
 
-  void _showDatePicker(BuildContext context) {
+  void _showDatePicker(BuildContext context, CupertinoDatePickerMode mode) {
     showCupertinoModalPopup(
       context: context,
       builder: (BuildContext context) {
@@ -45,16 +53,30 @@ class _AddDatePageState extends ConsumerState<AddDatePage> {
               SizedBox(
                 height: 240,
                 child: CupertinoDatePicker(
-                  mode: CupertinoDatePickerMode.dateAndTime,
+                  mode: mode,  // Only date, no time
                   initialDateTime: _selectedDate,
-                  onDateTimeChanged: (DateTime newDate) {
+                  onDateTimeChanged: (DateTime newDateTime) {
                     setState(() {
-                      _selectedDate = newDate;
+                      // Preserve the time while updating the date
+                      _selectedDate = mode == CupertinoDatePickerMode.date ?
+                      DateTime(
+                        newDateTime.year,
+                        newDateTime.month,
+                        newDateTime.day,
+                        _selectedDate.hour,
+                        _selectedDate.minute,
+                      ) : 
+                      DateTime(
+                        _selectedDate.year,
+                        _selectedDate.month,
+                        _selectedDate.day,
+                        newDateTime.hour,
+                        newDateTime.minute,
+                      ); 
                     });
                   },
                 ),
               ),
-              // Button to close the modal
               CupertinoButton(
                 child: const Text('Done'),
                 onPressed: () => Navigator.of(context).pop(),
@@ -68,7 +90,6 @@ class _AddDatePageState extends ConsumerState<AddDatePage> {
 
   void _submitForm() {
     if (_nameController.text.isEmpty) {
-      // Show error
       showCupertinoDialog(
         context: context,
         builder: (context) => CupertinoAlertDialog(
@@ -91,61 +112,115 @@ class _AddDatePageState extends ConsumerState<AddDatePage> {
     );
 
     ref.read(asyncDateStateProvider.notifier).addDate(newEvent);
+    _resetState();
+  }
+
+  void _resetState() {
+    _selectedDate = DateTime.now();
     _nameController.clear();
+  }
+
+  void _toggleAllowTime(bool? _) {
+    final now = DateTime.now(); 
     setState(() {
-      _selectedDate = DateTime.now();
+      _showTimePicker = !_showTimePicker;
+      _selectedDate = _showTimePicker? _selectedDate.add(Duration(hours: now.hour, minutes: now.minute)):
+          DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, 0, 0);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Event Name Input
-          CupertinoTextField(
-            controller: _nameController,
-            placeholder: 'Event Name',
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              border: Border.all(color: CupertinoColors.systemGrey),
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Date/Time Input
-          GestureDetector(
-            onTap: () => _showDatePicker(context),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                border: Border.all(color: CupertinoColors.systemGrey),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _selectedDate.formateDateStringToStandard(),
-                    style: const TextStyle(fontSize: 16),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Event Name Input
+                CupertinoTextField(
+                  controller: _nameController,
+                  placeholder: 'Event Name',
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: CupertinoColors.systemGrey),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  const Icon(CupertinoIcons.calendar),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+
+                // Date Input
+                GestureDetector(
+                  onTap: () => _showDatePicker(context, CupertinoDatePickerMode.date),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: CupertinoColors.systemGrey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const Icon(CupertinoIcons.calendar),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Time Input Session
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    CupertinoCheckbox(value: _showTimePicker, onChanged: _toggleAllowTime),
+                    const SizedBox(width: 16),
+
+                    // Time Input
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => _showTimePicker? _showDatePicker(context, CupertinoDatePickerMode.time): null,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: _showTimePicker? CupertinoColors.systemGrey: CupertinoColors.lightBackgroundGray),
+                            color: _showTimePicker? CupertinoColors.transparent: CupertinoColors.extraLightBackgroundGray,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${_selectedDate.hour.toString().padLeft(2, '0')}:${_selectedDate.minute.toString().padLeft(2, '0')}',
+                                style: TextStyle(fontSize: 16, color: _showTimePicker? CupertinoColors.black: CupertinoColors.lightBackgroundGray),
+                              ),
+                              const Icon(CupertinoIcons.clock),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 24),
-
-          // Submit Button
-          CupertinoButton.filled(
+        ),
+        // Add Event Button at bottom
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: CupertinoButton.filled(
             onPressed: _submitForm,
             child: const Text('Add Event'),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -61,16 +61,19 @@ class _DateListPageState extends ConsumerState<DateListPage> with SingleTickerPr
 
     return  ListenableBuilder(listenable: _dateController, builder: (BuildContext context, Widget? child){ 
               return ListenableBuilder(listenable: _visibilityController, builder: (BuildContext context, Widget? child){ 
-                return CupertinoPageScaffold(
-                  resizeToAvoidBottomInset: false,
-                  navigationBar: CupertinoNavigationBar(
-                    middle: const Text('Target Date List'),
-                    trailing: IconButton(
-                      onPressed: _visibilityController.toggleVisibility, 
-                      icon: Icon(_visibilityController.visible ? Icons.close : Icons.add)
+                return GestureDetector(
+                  onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+                  child: CupertinoPageScaffold(
+                    resizeToAvoidBottomInset: false,
+                    navigationBar: CupertinoNavigationBar(
+                      middle: const Text('Target Date List'),
+                      trailing: IconButton(
+                        onPressed: _visibilityController.toggleVisibility, 
+                        icon: Icon(_visibilityController.visible ? Icons.close : Icons.add)
+                      ),
                     ),
-                  ),
-                  child: _buildBody(dateState),
+                    child: _buildBody(dateState),
+                  )
                 );
               });
             }); 
@@ -112,7 +115,7 @@ class _DateListPageState extends ConsumerState<DateListPage> with SingleTickerPr
             ),
             FloatingBottomDrawer(
               visibilityController: _visibilityController,
-              child: AddDatePage(date: _dateController.result), 
+              child: const AddDatePage(), 
             ),
           ],
         ),
