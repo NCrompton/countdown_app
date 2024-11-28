@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:calendar/components/date_list_cell.dart';
 import 'package:calendar/controllers/date_controller.dart';
 import 'package:calendar/controllers/view_provider.dart';
@@ -11,7 +9,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:calendar/screens/countdown_detail.dart';
-import 'package:calendar/model/countdown_data.dart';
 import 'package:home_widget/home_widget.dart';
 
 final provider= asyncDateStateProvider;
@@ -82,32 +79,36 @@ class _DateListPageState extends ConsumerState<DateListPage> with SingleTickerPr
     return SafeArea(
         child: Stack(
           children: [
-            CustomScrollView(
-              slivers: [
-                CupertinoSliverRefreshControl(
-                  onRefresh: () async {
-                  },
-                ),
-                SliverToBoxAdapter(
-                  child: (dates == null || dates.isEmpty) 
-                    ? const SizedBox() 
-                    : CupertinoListSection(
-                        children: dates.map((countdownData) {
-                          return Builder(
-                            builder: (context) {
-                              return DateListCell(
-                                onTap: () {
-                                  openPageSide(context, CountdownDateDetail(countdown: countdownData));
-                                },
-                                data: countdownData, 
-                                isTarget: (countdownData.id == targetDateId),
-                              );
-                            },
-                          );
-                        }).toList(),
-                      ),
-                ),
-              ],
+            GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => _visibilityController.setVisibility(false),
+              child: CustomScrollView(
+                slivers: [
+                  CupertinoSliverRefreshControl(
+                    onRefresh: () async {
+                    },
+                  ),
+                  SliverToBoxAdapter(
+                    child: (dates == null || dates.isEmpty) 
+                      ? const SizedBox() 
+                      : CupertinoListSection(
+                          children: dates.map((countdownData) {
+                            return Builder(
+                              builder: (context) {
+                                return DateListCell(
+                                  onTap: () {
+                                    openPageSide(context, CountdownDateDetail(countdown: countdownData));
+                                  },
+                                  data: countdownData, 
+                                  isTarget: (countdownData.id == targetDateId),
+                                );
+                              },
+                            );
+                          }).toList(),
+                        ),
+                  ),
+                ],
+              ),
             ),
             FloatingBottomDrawer(
               visibilityController: _visibilityController,

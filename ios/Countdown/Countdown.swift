@@ -106,6 +106,14 @@ struct CountdownEntryView : View {
                 SmallInfoText(text: "Interval")
                 Text(entry.interval).font(.title)
             }
+        case .systemLarge, .systemExtraLarge:
+            VStack {
+                Text(entry.name)
+                Text(entry.date, style: .date)
+                
+                SmallInfoText(text: "Interval")
+                Text(entry.interval).font(.title)
+            }
         case .accessoryCircular:
             Text(entry.interval)
         default:

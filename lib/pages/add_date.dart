@@ -1,8 +1,6 @@
 import 'package:calendar/model/countdown_data.dart';
 import 'package:calendar/providers/date_provider.dart';
-import 'package:calendar/utils/date_util.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AddDatePage extends ConsumerStatefulWidget {
@@ -90,7 +88,7 @@ class _AddDatePageState extends ConsumerState<AddDatePage> {
     );
   }
 
-  void _submitForm(bool _isTargetDateEmpty) {
+  void _submitForm(bool isTargetDateEmpty) {
     if (_nameController.text.isEmpty) {
       showCupertinoDialog(
         context: context,
@@ -115,7 +113,7 @@ class _AddDatePageState extends ConsumerState<AddDatePage> {
 
     ref.read(asyncDateStateProvider.notifier).addDate(newEvent);
 
-    if (_isTargetDateEmpty) {
+    if (isTargetDateEmpty) {
       showCupertinoDialog(
         context: context,
         builder: (context) => CupertinoAlertDialog(
@@ -138,7 +136,7 @@ class _AddDatePageState extends ConsumerState<AddDatePage> {
       );
     }
     _resetState();
-    
+
     if (widget.dismiss == null) return;
     widget.dismiss!();
   }
@@ -163,7 +161,7 @@ class _AddDatePageState extends ConsumerState<AddDatePage> {
 
   @override
   Widget build(BuildContext context) {
-    bool _isTargetDateEmpty = ref.watch(asyncDateStateProvider.select((state) => state.value?.targetDate == null));
+    bool isTargetDateEmpty = ref.watch(asyncDateStateProvider.select((state) => state.value?.targetDate == null));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -249,7 +247,7 @@ class _AddDatePageState extends ConsumerState<AddDatePage> {
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: CupertinoButton.filled(
-            onPressed: () => _submitForm(_isTargetDateEmpty),
+            onPressed: () => _submitForm(isTargetDateEmpty),
             child: const Text('Add Event'),
           ),
         ),

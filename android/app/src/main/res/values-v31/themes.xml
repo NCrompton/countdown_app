@@ -10,9 +10,11 @@
     <style name="Theme.Android.AppWidgetContainer" parent="Theme.Android.AppWidgetContainerParent">
         <item name="appWidgetInnerRadius">@android:dimen/system_app_widget_inner_radius</item>
         <item name="appWidgetRadius">@android:dimen/system_app_widget_background_radius</item>
+        <item name="appWidgetColorBackground">@android:color/background_light</item>
     </style>
     <style name="Theme.Android.AppWidgetContainerTiny" parent="Theme.Android.AppWidgetContainerParent">
         <item name="appWidgetInnerRadius">8dp</item>
-        <item name="appWidgetRadius">8dp</item>
+        <item name="appWidgetRadius">@android:dimen/system_app_widget_background_radius</item>
+        <item name="appWidgetColorBackground">@android:color/holo_blue_light</item>
     </style>
 </resources>
