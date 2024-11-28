@@ -8,5 +8,6 @@
     <style name="Theme.Android.AppWidgetContainer" parent="Theme.Android.AppWidgetContainerParent">
         <!-- Apply padding to avoid the content of the widget colliding with the rounded corners -->
         <item name="appWidgetPadding">0dp</item>
+        <item name="appWidgetColorBackground">@android:color/background_light</item>
     </style>
 </resources>
