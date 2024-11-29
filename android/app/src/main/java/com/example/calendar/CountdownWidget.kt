@@ -189,6 +189,7 @@ internal fun updateAppWidget(
 
         val viewMapping: Map<SizeF, RemoteViews> = mapOf(
             SizeF(215f, 100f) to wideViews,
+            SizeF(150f, 150f) to wideViews,
             SizeF(150f, 100f) to tinyViews,
         )
         remoteView = RemoteViews(viewMapping)
