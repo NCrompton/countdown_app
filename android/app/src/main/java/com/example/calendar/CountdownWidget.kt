@@ -109,7 +109,7 @@ internal fun updateAppWidget(
         PendingIntent.FLAG_IMMUTABLE)
 
     val wideViews = RemoteViews(context.packageName, R.layout.countdown_widget).apply {
-        var dateString = widgetData.getString("countdown_date", null)
+        var dateString = widgetData.getString("countdown_date", "2024-11-29 00:00:00")
         val preferredTimeFormat = widgetData.getString("preferred_time_format", null).takeIf { it != null } ?: standardTimeFormat
         val preferredIntervalFormat = widgetData.getString("countdown_preferred_interval_format", null).takeIf { it != null } ?: standardIntervalFormat
         val date = LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern(standardTimeFormat))
@@ -134,36 +134,36 @@ internal fun updateAppWidget(
     }
 
     val narrowViews = RemoteViews(context.packageName, R.layout.countdown_widget_narrow).apply {
-        var dateString = widgetData.getString("countdown_date", null)
-        val preferredTimeFormat = widgetData.getString("preferred_time_format", null).takeIf { it != null } ?: standardTimeFormat
-        val preferredIntervalFormat = widgetData.getString("preferred_interval_format", null).takeIf { it != null } ?: standardIntervalFormat
-        val date = LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern(standardTimeFormat))
-        dateString = formatLocalDateTime(date, preferredTimeFormat)
-
-        val imagePath = widgetData.getString("bgimage", null)
-        val bitmap = BitmapFactory.decodeFile(imagePath)
-
-        val dateName = widgetData.getString("countdown_name", null)
-
-        val dateNamePrefix = if (date.isBefore(LocalDateTime.now())) "Since" else "To"
-
-        val interval = if (date.isBefore(LocalDateTime.now()))
-            Duration.between(date, LocalDateTime.now()) else
-            Duration.between(LocalDateTime.now(), date)
-
-        val intervalString = parseIntervalFormat(interval, preferredIntervalFormat)
-
-        setOnClickPendingIntent(R.id.widget_box, pendingIntent)
-
-        setImageViewBitmap(R.id.calendar_background, bitmap)
-        setTextViewText(R.id.date_as_string, "dateString")
-        setTextViewText(R.id.date_name, dateName)
-        setTextViewText(R.id.date_name_prefix, dateNamePrefix)
-        setTextViewText(R.id.interval_string, intervalString)
+//        var dateString = widgetData.getString("countdown_date", null)
+//        val preferredTimeFormat = widgetData.getString("preferred_time_format", null).takeIf { it != null } ?: standardTimeFormat
+//        val preferredIntervalFormat = widgetData.getString("preferred_interval_format", null).takeIf { it != null } ?: standardIntervalFormat
+//        val date = LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern(standardTimeFormat))
+//        dateString = formatLocalDateTime(date, preferredTimeFormat)
+//
+//        val imagePath = widgetData.getString("bgimage", null)
+//        val bitmap = BitmapFactory.decodeFile(imagePath)
+//
+//        val dateName = widgetData.getString("countdown_name", null)
+//
+//        val dateNamePrefix = if (date.isBefore(LocalDateTime.now())) "Since" else "To"
+//
+//        val interval = if (date.isBefore(LocalDateTime.now()))
+//            Duration.between(date, LocalDateTime.now()) else
+//            Duration.between(LocalDateTime.now(), date)
+//
+//        val intervalString = parseIntervalFormat(interval, preferredIntervalFormat)
+//
+//        setOnClickPendingIntent(R.id.widget_box, pendingIntent)
+//
+//        setImageViewBitmap(R.id.calendar_background, bitmap)
+//        setTextViewText(R.id.date_as_string, "dateString")
+//        setTextViewText(R.id.date_name, dateName)
+//        setTextViewText(R.id.date_name_prefix, dateNamePrefix)
+//        setTextViewText(R.id.interval_string, intervalString)
     }
 
     val tinyViews = RemoteViews(context.packageName, R.layout.countdown_widget_tiny).apply {
-        val dateString = widgetData.getString("countdown_date", null)
+        val dateString = widgetData.getString("countdown_date", "2024-11-29 00:00:00")
         val preferredIntervalFormat = widgetData.getString("preferred_interval_format", null).takeIf { it != null } ?: standardIntervalFormatTiny
         val date = LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern(standardTimeFormat))
         val intervalStringColor = widgetData.getString("countdown_interval_color", null)
@@ -188,9 +188,9 @@ internal fun updateAppWidget(
     if (android.os.Build.VERSION.SDK_INT >= 31) {
 
         val viewMapping: Map<SizeF, RemoteViews> = mapOf(
-            SizeF(215f, 100f) to wideViews,
-            SizeF(150f, 150f) to wideViews,
-            SizeF(150f, 100f) to tinyViews,
+            SizeF(120f, 100f) to tinyViews,
+            SizeF(170f, 150f) to narrowViews,
+            SizeF(215f, 150f) to wideViews,
         )
         remoteView = RemoteViews(viewMapping)
 

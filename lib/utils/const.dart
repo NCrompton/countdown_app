@@ -18,4 +18,4 @@ const int afterCountdownColor = 0xff00AA00;
 const String dateFormat = "yyyy-MM-dd HH:mm:ss";
 
 /* feature flag */
-const bool customIntervalFormatEnable = true;
+const bool customIntervalFormatEnable = false;
