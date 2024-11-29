@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:calendar/model/countdown_data.dart';
 import 'package:calendar/model/duration_component.dart';
 import 'package:calendar/providers/date_provider.dart';
+import 'package:calendar/utils/const.dart';
 import 'package:calendar/utils/date_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,7 +33,7 @@ class DateListCellState extends ConsumerState<DateListCell> {
 
     date = widget.data.date;
     interval = date.standardDifferenceFromNow(DateTime.now());
-    intervalColor = date.isBefore(DateTime.now())? Colors.redAccent: Colors.lightGreen;
+    intervalColor = date.isBefore(DateTime.now())? const Color(beforeCountdownColor): const Color(afterCountdownColor);
 
     // Align timer updates to occur at the start of each second
     var now = DateTime.now();

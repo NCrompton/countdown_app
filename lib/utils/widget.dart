@@ -1,5 +1,7 @@
 import 'package:calendar/utils/const.dart';
 import 'package:calendar/utils/date_util.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:home_widget/home_widget.dart';
 
 class NativeWidgetManager {
@@ -16,19 +18,34 @@ class NativeWidgetManager {
 
   factory NativeWidgetManager() => _manager; 
 
-  void setWidgetDate(DateTime date) {
+  void _setWidgetDate(DateTime date) {
       HomeWidget.saveWidgetData<String>(
           widgetDateParamName, date.formateDateStringToStandard());
   }
 
-  void setWidgetDateName(String name) {
+  void _setWidgetDateName(String name) {
       HomeWidget.saveWidgetData<String>(
           widgetNameParamName, name);
   }
 
-  void updateWidget(DateTime date, String name) {
-      setWidgetDate(date);
-      setWidgetDateName(name);
+  void _setWidgetIntervalColor(String colorHex) {
+    HomeWidget.saveWidgetData<String>(widgetIntervalColorParamName, colorHex);
+  }
+
+  void _setPreferedIntervalFormat(String preferredTimeFormat) {
+    HomeWidget.saveWidgetData(widgetPrefIntervalFormParamName, preferredTimeFormat);
+  }
+
+  void _renderFlutterWidget(Widget widget, String key, Size size) async {
+    var path = await HomeWidget.renderFlutterWidget(
+      widget,
+      key: key,
+      logicalSize: size,
+    );
+    print(path);
+  }
+
+  void _updateWidget() {
       HomeWidget.updateWidget(
         iOSName: iOSWidgetName,
         androidName: androidWidgetName,
@@ -36,13 +53,32 @@ class NativeWidgetManager {
       );
   }
 
+  void updateWidget(DateTime date, String name) {
+      _setWidgetDate(date);
+      _setWidgetDateName(name);
+      _updateWidget();
+  }
+
   void resetWidget() {
-    setWidgetDate(DateTime.now());
-    setWidgetDateName("");
-    HomeWidget.updateWidget(
-      iOSName: iOSWidgetName,
-      androidName: androidWidgetName,
-      qualifiedAndroidName: fullAndroidWidgetName,
-    );
+    _setWidgetDate(DateTime.now());
+    _setWidgetDateName("");
+    _updateWidget();
+  }
+
+  void countdownTimeFormat(bool day, bool hour, bool minute, bool second) {
+    String preferredTimeFormat = "";
+    preferredTimeFormat += day ? "d" : "";
+    preferredTimeFormat += hour ? "h" : "";
+    preferredTimeFormat += minute ? "m" : "";
+    preferredTimeFormat += second ? "s" : "";
+    _setPreferedIntervalFormat(preferredTimeFormat);
+    _updateWidget();
+  }
+
+  void renderCountdownWidgetBackground(String bgAssetPath) async {
+    await rootBundle.load(bgAssetPath);
+    Widget widget = Container(child: Image.asset(bgAssetPath), width: 400, height: 400,);
+
+    _renderFlutterWidget(widget, "bgimage", const Size(400, 400));
   }
 }
