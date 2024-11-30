@@ -19,3 +19,7 @@ const String dateFormat = "yyyy-MM-dd HH:mm:ss";
 
 /* feature flag */
 const bool customIntervalFormatEnable = false;
+
+/* widget callback */
+const String callbackPrefix = "Mason";
+const String sBudgetWidgetCallback = "BudgetWidgetCallback";
