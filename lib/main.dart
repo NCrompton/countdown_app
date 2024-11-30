@@ -1,5 +1,7 @@
+import 'package:calendar/model/countdown_data.dart';
 import 'package:calendar/screens/date_calculation_page.dart';
 import 'package:calendar/utils/storage.dart';
+import 'package:calendar/utils/widget.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:calendar/pages/front_page.dart';
@@ -7,6 +9,9 @@ import 'package:flutter/cupertino.dart';
 
 void main() {
   // Workmanager().initialize(callbackDispatcher, isInDebugMode: kDebugMode);
+  WidgetsFlutterBinding.ensureInitialized();
+  _initWidgetValue();
+
   runApp(
     const ProviderScope(
       child: MyApp(),
@@ -14,7 +19,13 @@ void main() {
   );
 }
 
-
+void _initWidgetValue() async {
+  LocalStorageManager.instance().then((m) async {
+    final date = await m.getTargetDate();
+    if (date == null) return;
+    NativeWidgetManager().updateWidget(date.date, date.toString());
+  });
+}
 // @pragma("vm:entry-point")
 // void callbackDispatcher() async {
   
