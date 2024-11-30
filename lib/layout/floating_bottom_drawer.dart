@@ -39,9 +39,13 @@ class FloatingBottomDrawerState extends State<FloatingBottomDrawer> {
           curve: Curves.fastEaseInToSlowEaseOut,
           child: Column(
             children: [
+              /* Dismiss View Mask */
               Expanded(
                 child: GestureDetector(
-                  onTap: () => widget.visibilityController.setVisibility(false),
+                  onTap: () {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                    widget.visibilityController.setVisibility(false);
+                  },
                 ),
               ),
               Container(
@@ -59,9 +63,11 @@ class FloatingBottomDrawerState extends State<FloatingBottomDrawer> {
                     ),
                   ],
                 ),
+
+                /* Main Content */
                 child: Column(
                   children: [
-                    // Handle bar
+                    /* Handle bar */
                     GestureDetector(
                       onVerticalDragUpdate: (details) {
                         setState(() {
@@ -82,7 +88,7 @@ class FloatingBottomDrawerState extends State<FloatingBottomDrawer> {
                       },
                       child: _buildDragToDismissSection(),
                     ),
-                    // Panel content
+                    /* Panel content */
                     Expanded(
                       child: widget.child,
                     ),

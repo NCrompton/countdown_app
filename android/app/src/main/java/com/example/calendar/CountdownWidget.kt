@@ -5,17 +5,10 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
-import android.content.res.AssetManager
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.util.SizeF
 import android.widget.RemoteViews
-import android.widget.TextView
-
 import es.antonborri.home_widget.HomeWidgetPlugin
-import io.flutter.embedding.engine.plugins.FlutterPlugin
-import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
-import io.flutter.plugin.common.PluginRegistry
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -115,7 +108,7 @@ internal fun updateAppWidget(
         val date = LocalDateTime.parse(dateString, DateTimeFormatter.ofPattern(standardTimeFormat))
         dateString = formatLocalDateTime(date, preferredTimeFormat)
 
-        val dateName = widgetData.getString("countdown_name", null)
+        val dateName = widgetData.getString("countdown_name", "...")
 
         val dateNamePrefix = if (date.isBefore(LocalDateTime.now())) "Since" else "To"
 

@@ -1,14 +1,12 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:calendar/model/countdown_data.dart';
-import 'package:calendar/providers/date_provider.dart';
 import 'package:calendar/utils/const.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorageManager {
   static LocalStorageManager? _manager; 
-  SharedPreferencesWithCache? _pref;
+  final SharedPreferencesWithCache? _pref;
 
   LocalStorageManager._({required SharedPreferencesWithCache pref}) : _pref = pref;
 

@@ -53,6 +53,12 @@ class DateListCellState extends ConsumerState<DateListCell> {
     });
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    _timer.cancel();
+  }
+
   void _deleteCell() {
     if (widget.isTarget) return;
     ref.read(asyncDateStateProvider.notifier).removeDate(widget.data.id);
@@ -74,7 +80,7 @@ class DateListCellState extends ConsumerState<DateListCell> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: widget.isTarget? Icon(Icons.star) : Icon(Icons.star_border),
+                  icon: widget.isTarget? const Icon(Icons.star) : const Icon(Icons.star_border),
                   onPressed: _setAsTargetDate,
                 ),
                 Expanded(child: Column(
@@ -84,7 +90,7 @@ class DateListCellState extends ConsumerState<DateListCell> {
                       children: [
                         Text(widget.data.toString(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),),
                         IconButton(
-                          icon: widget.isTarget? Icon(Icons.star) : Icon(Icons.delete),
+                          icon: widget.isTarget? const Icon(Icons.star) : const Icon(Icons.delete),
                           onPressed: _deleteCell,
                         ),
                       ],

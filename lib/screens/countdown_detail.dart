@@ -3,9 +3,7 @@ import 'dart:async';
 import 'package:calendar/providers/date_provider.dart';
 import 'package:calendar/utils/date_util.dart';
 import 'package:calendar/utils/view_helper.dart';
-import 'package:calendar/utils/widget.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../model/countdown_data.dart';
@@ -25,7 +23,7 @@ class CountdownDateDetail extends ConsumerStatefulWidget {
   class CountdownDateDetailState extends ConsumerState<CountdownDateDetail> {
 
     late Timer timer;
-    Duration diff = Duration();
+    Duration diff = const Duration();
     bool isbeforeNow = false;
 
     @override
@@ -71,7 +69,7 @@ class CountdownDateDetail extends ConsumerStatefulWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(isbeforeNow? "Since" : "To"),
-                        Text("${widget.countdown.date.formateDateStringToStandard()}"),
+                        Text(widget.countdown.date.formateDateStringToStandard()),
                         Text(
                           "${diff.inDays}d ${diff.inHours - diff.inDays*24}h ${diff.inMinutes - diff.inHours*60}m",
                           style: const TextStyle(fontSize: 32),
