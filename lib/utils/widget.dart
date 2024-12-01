@@ -18,23 +18,13 @@ class NativeWidgetManager {
 
   factory NativeWidgetManager() => _manager; 
 
-  void _setWidgetDate(DateTime date) {
-      HomeWidget.saveWidgetData<String>(
-          widgetDateParamName, date.formateDateStringToStandard());
-  }
+  void _setWidgetDate(DateTime date) {HomeWidget.saveWidgetData<String>(widgetDateParamName, date.formateDateStringToStandard());}
 
-  void _setWidgetDateName(String name) {
-      HomeWidget.saveWidgetData<String>(
-          widgetNameParamName, name);
-  }
+  void _setWidgetDateName(String name) {HomeWidget.saveWidgetData<String>(widgetNameParamName, name);}
 
-  void _setWidgetIntervalColor(String colorHex) {
-    HomeWidget.saveWidgetData<String>(widgetIntervalColorParamName, colorHex);
-  }
+  void _setWidgetIntervalColor(String colorHex) {HomeWidget.saveWidgetData<String>(widgetIntervalColorParamName, colorHex);}
 
-  void _setPreferedIntervalFormat(String preferredTimeFormat) {
-    HomeWidget.saveWidgetData(widgetPrefIntervalFormParamName, preferredTimeFormat);
-  }
+  void _setPreferedIntervalFormat(String preferredTimeFormat) {HomeWidget.saveWidgetData(widgetPrefIntervalFormParamName, preferredTimeFormat);}
 
   void _renderFlutterWidget(Widget widget, String key, Size size) async {
     var path = await HomeWidget.renderFlutterWidget(
@@ -45,24 +35,33 @@ class NativeWidgetManager {
     print(path);
   }
 
-  void _updateWidget() {
+  void _updateCalendarWidget() {
       HomeWidget.updateWidget(
-        iOSName: iOSWidgetName,
-        androidName: androidWidgetName,
-        qualifiedAndroidName: fullAndroidWidgetName,
+        iOSName: iOSWidgetNameCalendar,
+        androidName: androidWidgetNameCalendar,
+        qualifiedAndroidName: fullAndroidWidgetNameCalendar,
+      );
+  }
+  
+  void _updateBudgetWidget() {
+      HomeWidget.updateWidget(
+        iOSName: iOSWidgetNameBudget,
+        androidName: androidWidgetNameBudget,
+        qualifiedAndroidName: fullAndroidWidgetNameBudget,
       );
   }
 
+  /* Calendar */
   void updateWidget(DateTime date, String name) {
       _setWidgetDate(date);
       _setWidgetDateName(name);
-      _updateWidget();
+      _updateCalendarWidget();
   }
 
   void resetWidget() {
     _setWidgetDate(DateTime.now());
     _setWidgetDateName("");
-    _updateWidget();
+    _updateCalendarWidget();
   }
 
   void countdownTimeFormat(bool day, bool hour, bool minute, bool second) {
@@ -72,7 +71,7 @@ class NativeWidgetManager {
     preferredTimeFormat += minute ? "m" : "";
     preferredTimeFormat += second ? "s" : "";
     _setPreferedIntervalFormat(preferredTimeFormat);
-    _updateWidget();
+    _updateCalendarWidget();
   }
 
   void renderCountdownWidgetBackground(String bgAssetPath) async {
@@ -80,5 +79,10 @@ class NativeWidgetManager {
     Widget widget = Container(child: Image.asset(bgAssetPath), width: 400, height: 400,);
 
     _renderFlutterWidget(widget, "bgimage", const Size(400, 400));
+  }
+
+  /* Budget */
+  void updateBudget(double value) {
+    _updateBudgetWidget();
   }
 }

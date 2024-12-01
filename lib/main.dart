@@ -33,9 +33,17 @@ void _initWidgetValue() async {
 
 @pragma("vm:entry-point")
 Future<void> budgetWidgetCallback(Uri? data) async {
-  if (data?.scheme != callbackPrefix) return;
-  if (data?.host != sBudgetWidgetCallback) return;
-  
-  print(data);
+  print("${data?.scheme}://${data?.host}");
+  if (data?.scheme != callbackPrefix.toLowerCase()) return;
+  if (data?.host != sBudgetWidgetCallback.toLowerCase()) return;
+
+  data?.queryParameters.forEach((k, v) {
+    if (k == widgetBudgetValueQueryName) {
+      try {
+        final value = double.parse(v);
+        print(value);
+      } catch(e) {}
+    }
+  });
 }
 
