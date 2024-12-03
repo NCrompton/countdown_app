@@ -119,3 +119,44 @@ class FloatingBottomDrawerState extends State<FloatingBottomDrawer> {
             );
   }
 }
+
+class FloatingBottomDrawerPage extends StatefulWidget {
+  final Widget Function(BuildContext, VisibilityController) build;
+  final Widget drawerChild;
+  final double heightPortion;
+
+  const FloatingBottomDrawerPage({
+    super.key, 
+    required this.build,  
+    required this.drawerChild,
+    this.heightPortion=0.8,
+  });
+
+  @override
+  State<FloatingBottomDrawerPage> createState() => _FloatingBottomDrawerPageState();
+}
+
+class _FloatingBottomDrawerPageState extends State<FloatingBottomDrawerPage> {
+
+  final VisibilityController _visibilityController = VisibilityController(false);
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+        child: Stack(
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => _visibilityController.setVisibility(false),
+              child: widget.build(context, _visibilityController),
+            ),
+            FloatingBottomDrawer(
+              visibilityController: _visibilityController,
+              heightPortion: widget.heightPortion,
+              child: widget.drawerChild, 
+            ),
+          ]
+        )
+    );
+  }
+}

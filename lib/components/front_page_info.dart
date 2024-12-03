@@ -3,12 +3,11 @@ import 'dart:async';
 import 'package:calendar/model/countdown_data.dart';
 import 'package:calendar/model/duration_component.dart';
 import 'package:calendar/providers/date_provider.dart';
+import 'package:calendar/screens/budget_thread_list.dart';
 import 'package:calendar/screens/date_list.dart';
 import 'package:calendar/utils/date_util.dart';
-import 'package:calendar/utils/widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -78,6 +77,24 @@ class FrontPageInfoState extends ConsumerState<FrontPageInfo> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text("Pick a Date", style: TextStyle(fontSize: 18)),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 2.0),
+                  child: Icon(Icons.arrow_right_sharp, size: 32,),
+                ),
+              ]
+            ),
+          ),
+          CupertinoButton.filled(
+            onPressed: () {
+              Navigator.push(context,
+                  CupertinoPageRoute(builder: (context) => const BudgetThreadList()));
+            },
+            alignment: Alignment.center,
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Budget", style: TextStyle(fontSize: 18)),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 2.0),
                   child: Icon(Icons.arrow_right_sharp, size: 32,),

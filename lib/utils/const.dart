@@ -19,10 +19,14 @@ const String widgetBudgetValueParamName = "budget_value";
 const String widgetBudgetValueQueryName = "value";
 
 /* color */
-const int beforeCountdownColor = 0xffdd0000;
-const int afterCountdownColor = 0xff00AA00; 
+const int negativeColor = 0xffdd0000;
+const int positiveColor = 0xff00AA00; 
+const int beforeCountdownColor = negativeColor;
+const int afterCountdownColor = positiveColor; 
 
 const String dateFormat = "yyyy-MM-dd HH:mm:ss";
+const String dateDisplayFormat = "dd MMM y HH:mm";
+const String dateDisplayShortFormat = "dd MMM y";
 
 /* feature flag */
 const bool customIntervalFormatEnable = false;
@@ -30,3 +34,6 @@ const bool customIntervalFormatEnable = false;
 /* widget callback */
 const String callbackPrefix = "mason";
 const String sBudgetWidgetCallback = "BudgetWidgetCallback";
+
+/* budget logic */
+const String defaultCurrency = "HKD";

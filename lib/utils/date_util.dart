@@ -8,6 +8,16 @@ extension DateTimeExtension on DateTime {
     return formatter.format(this);
   }
 
+  String formatToDisplay() {
+    final DateFormat formatter = DateFormat(dateDisplayFormat);
+    return formatter.format(this);
+  }
+
+  String formatToShortDisplay() {
+    final DateFormat formatter = DateFormat(dateDisplayShortFormat);
+    return formatter.format(this);
+  }
+
   DurationComponent standardDifferenceFromNow(DateTime other) {
     return DurationComponent(duration: (isBefore(other))? 
             other.difference(this):
