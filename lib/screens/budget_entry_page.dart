@@ -5,8 +5,10 @@ import 'package:calendar/dummy/dummy_data.dart';
 import 'package:calendar/layout/floating_bottom_drawer.dart';
 import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/providers/budget_entry_provider.dart';
+import 'package:calendar/utils/const.dart';
 import 'package:calendar/utils/date_util.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BudgetEntryPage extends ConsumerWidget {
@@ -69,7 +71,7 @@ class BudgetEntryPage extends ConsumerWidget {
         middle: Text(entry.entryName),
       ),
       child: FloatingBottomDrawerPage(
-        heightPortion: 0.7,
+        heightPortion: 0.6,
         drawerChild: (dismiss) => ChangedValuePreview(
           targets: targets,
           onConfirm:() {
@@ -79,27 +81,31 @@ class BudgetEntryPage extends ConsumerWidget {
           onReject: dismiss,
         ),
         builder: (context, visibilityController) {
-         return  Column(
+         return  Container(
+          color: CupertinoColors.secondarySystemBackground,
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            children: [
+              Expanded(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: Column(
-                        children: [
-                          EntryAttributeRow<String>(attributeName: "Name", inputController: _nameController,),
-                          EntryAttributeRow<double>(attributeName: "Price", inputController: _priceController,),
-                          EntryAttributeRow<Currency>(attributeName: "Currency", attributeValueString: _currencyController.value.name, inputController: _currencyController, enumList:Currency.values),
-                          EntryAttributeRow<DateTime>(attributeName: "Create Time", attributeValueString: _createDateController.value.formatToDisplay(), inputController: _createDateController,),
-                          EntryAttributeRow<BudgetEntryType>(attributeName: "Type", attributeValueString: _typeController.value.typeName, inputController: _typeController, customInput: _buildTypeInputWidget(context),),
-                        ],
-                      ),
-                    ),
-                    CupertinoButton.filled(
-                      onPressed: () {
-                        visibilityController.setVisibility(true);
-                      },
-                      child: const Text("Update Budget"), 
-                    )
+                    EntryAttributeRow<String>(attributeName: "Name", inputController: _nameController,),
+                    EntryAttributeRow<double>(attributeName: "Price", inputController: _priceController,),
+                    EntryAttributeRow<Currency>(attributeName: "Currency", attributeValueString: _currencyController.value.name.toUpperCase(), inputController: _currencyController, enumList:Currency.values, allowExitEditing: false,),
+                    EntryAttributeRow<DateTime>(attributeName: "Create Time", attributeValueString: _createDateController.value.formatToDisplay(), inputController: _createDateController, allowExitEditing: false,),
+                    EntryAttributeRow<BudgetEntryType>(attributeName: "Type", attributeValueString: _typeController.value.typeName, inputController: _typeController, customInput: _buildTypeInputWidget(context), allowExitEditing: false,),
                   ],
-                );
+                ),
+              ),
+              CupertinoButton.filled(
+                onPressed: () {
+                  visibilityController.setVisibility(true);
+                },
+                child: const Text("Update Budget"), 
+              )
+            ],
+          ),
+        );
         }
       )
     );
@@ -110,6 +116,7 @@ class ChangedValue {
   final String name;
   final String oldValue;
   final String newValue;
+  bool get isChange => oldValue != newValue;
 
   const ChangedValue({
     required this.name,
@@ -133,43 +140,95 @@ class ChangedValuePreview extends StatelessWidget {
   Widget _buildRow(ChangedValue target) {
     return Builder(
       builder: (context) {
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(target.name),
-            Text(target.oldValue),
-            const Icon(CupertinoIcons.arrow_right),
-            Text(target.newValue),
-          ]
+        return Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    target.name, 
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ),
+                ...!target.isChange
+                ? _buildChangesRow(target)
+                : _buildNonChangeRow(target),
+              ]
+            ),
+          ),
         );
       }
     );
   }
 
+  List<Widget> _buildChangesRow(ChangedValue target) {
+    return [
+      const Expanded(flex: 1, child: SizedBox()),
+      Expanded(
+        flex: 3,
+        child: Text(
+          target.oldValue,
+          style: const TextStyle(color: Color(negativeColor), ),
+        ),
+      ),
+      const Expanded(
+        flex: 2,
+        child: Icon(CupertinoIcons.arrow_right)
+      ),
+      Expanded(
+        flex: 3,
+        child: Text(
+          target.newValue,
+          style: const TextStyle(color: Color(positiveColor)),
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildNonChangeRow(ChangedValue target) {
+    return [
+      const Expanded(flex: 1, child: SizedBox()),
+      Expanded(
+        flex: 4,
+        child: Text(
+          target.oldValue,
+          style: const TextStyle(color: Colors.black,)
+        ),
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: targets.length + 1, // +1 for the row with buttons
-      itemBuilder: (context, index) {
-        if (index < targets.length) {
-          return _buildRow(targets[index]);
-        } else {
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              CupertinoButton.filled(
-                onPressed: onConfirm,
-                child: const Text("Confirm"),
-              ),
-              CupertinoButton(
-                color: CupertinoColors.destructiveRed,
-                onPressed: onReject,
-                child: const Text("Reject"),
-              ),
-            ],
-          );
-        }
-      },
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            ...targets.map(_buildRow).toList(),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                CupertinoButton.filled(
+                  onPressed: onConfirm,
+                  child: const Text("Confirm"),
+                ),
+                CupertinoButton(
+                  color: CupertinoColors.destructiveRed,
+                  onPressed: onReject,
+                  child: const Text("Reject"),
+                ),
+              ]
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

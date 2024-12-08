@@ -15,6 +15,7 @@ class EntryAttributeRow<T> extends StatefulWidget {
   final IconData? icon;
   final Widget? customInput;
   final List<T>? enumList;
+  final bool allowExitEditing;
 
   const EntryAttributeRow({
     super.key,
@@ -23,8 +24,9 @@ class EntryAttributeRow<T> extends StatefulWidget {
     this.attributeValueString,
     this.icon,
     this.enumList,
-    this.customInput
-  });
+    this.customInput,
+    bool? allowExitEditing,
+  }):allowExitEditing = allowExitEditing ?? true;
 
   @override
   State<EntryAttributeRow<T>> createState() => _EntryAttributeRowState<T>();
@@ -97,7 +99,8 @@ class _EntryAttributeRowState<T> extends State<EntryAttributeRow<T>> {
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: widget.inputController,
-      child: IconButton(
+      child: (!widget.allowExitEditing && isEditing) ? const SizedBox() 
+      : IconButton(
         icon: !isEditing ? const Icon(CupertinoIcons.pencil) : const Icon(CupertinoIcons.check_mark),
         onPressed: () =>
           setState(() {
@@ -120,12 +123,12 @@ class _EntryAttributeRowState<T> extends State<EntryAttributeRow<T>> {
                       child: Text(widget.attributeName)
                     ),
                     Text(widget.attributeValueString ?? widget.inputController.value.toString())
-                  ]):
-                  T == String? _buildStringInputWidget():
-                  T == int || T == double? _buildIntInputWidget():
-                  T == DateTime? _buildDateTimeInputWidget():
-                  _buildEnumInputWidget() ?? 
-                  widget.customInput ?? const Text("Unknown Attribute Value"),
+                  ])
+                  : T == String? _buildStringInputWidget()
+                  : T == int || T == double? _buildIntInputWidget()
+                  : T == DateTime? _buildDateTimeInputWidget()
+                  : _buildEnumInputWidget()
+                  ?? widget.customInput ?? const Text("Unknown Attribute Value"),
               ),
           
               const SizedBox(width: 12),
