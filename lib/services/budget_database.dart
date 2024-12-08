@@ -37,8 +37,13 @@ class BudgetDatabase {
 
   Future<void> saveEntryToThread(BudgetThread thread) async {
     return await _isar.writeTxn(() async {
-      // await _isar.budgetThreads.put(thread);
       await thread.budgets.save();
+    });
+  }
+
+  Future<bool> updateThread(BudgetThread thread) async {
+    return await _isar.writeTxn(() async {
+      return await _isar.budgetThreads.put(thread) > 0;
     });
   }
 
@@ -54,7 +59,7 @@ class BudgetDatabase {
   }
 
   Future<List<BudgetEntry>> getEntriesFromThread(Id threadId) async {
-    return _isar.budgetEntrys.filter().thread((q) => q.idEqualTo(threadId)).findAll();
+    return (await _isar.budgetThreads.filter().idEqualTo(threadId).findFirst())!.budgets.toList();
   }
 
   Future<Id> createEntry(BudgetEntry entry) async {
@@ -71,5 +76,11 @@ class BudgetDatabase {
 
   Future<List<BudgetEntry>> getAllEntries() async {
     return _isar.budgetEntrys.where().findAll();
+  }
+
+  Future<bool> deleteEntry(Id id) async {
+    return await _isar.writeTxn(() async {
+      return await _isar.budgetEntrys.delete(id);
+    });
   }
 } 

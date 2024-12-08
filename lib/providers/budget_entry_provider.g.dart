@@ -7,12 +7,12 @@ part of 'budget_entry_provider.dart';
 // **************************************************************************
 
 String _$budgetEntriesProviderHash() =>
-    r'4f130b743623d57291d11cea0ca0d4fc57f2465d';
+    r'4ba26204d10ee37a5831e746a2c752b8e150bf91';
 
 /// See also [BudgetEntriesProvider].
 @ProviderFor(BudgetEntriesProvider)
-final budgetEntriesProviderProvider =
-    AsyncNotifierProvider<BudgetEntriesProvider, List<BudgetEntry>>.internal(
+final budgetEntriesProviderProvider = AutoDisposeAsyncNotifierProvider<
+    BudgetEntriesProvider, List<BudgetEntry>>.internal(
   BudgetEntriesProvider.new,
   name: r'budgetEntriesProviderProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -22,9 +22,9 @@ final budgetEntriesProviderProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$BudgetEntriesProvider = AsyncNotifier<List<BudgetEntry>>;
+typedef _$BudgetEntriesProvider = AutoDisposeAsyncNotifier<List<BudgetEntry>>;
 String _$budgetThreadEntryProviderHash() =>
-    r'868a2c456f8f675d5f2782d5eae923836644dc1b';
+    r'105c8839265e696ec20187960e229f47d6d7b7c3';
 
 /// Copied from Dart SDK
 class _SystemHash {
