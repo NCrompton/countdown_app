@@ -18,7 +18,7 @@ class NativeWidgetManager {
 
   factory NativeWidgetManager() => _manager; 
 
-  void _setWidgetDate(DateTime date) {HomeWidget.saveWidgetData<String>(widgetDateParamName, date.formateDateStringToStandard());}
+  void _setWidgetDate(DateTime date) {HomeWidget.saveWidgetData<String>(widgetDateParamName, date.formatToStandard());}
 
   void _setWidgetDateName(String name) {HomeWidget.saveWidgetData<String>(widgetNameParamName, name);}
 

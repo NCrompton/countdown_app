@@ -1,10 +1,6 @@
-import 'package:calendar/model/budget_model.dart';
+import 'package:calendar/model/budget_schema.dart';
 
 extension BudgetThreadUtil on BudgetThread {
-  void addBudgets(BudgetEntry entry) {
-    budgets = [...budgets, entry]; /* reuse budget sorting logic */
-  }
-
   double getTotalBudget() {
     var total = 0.0;
     for (final b in budgets) {

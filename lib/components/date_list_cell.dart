@@ -106,7 +106,7 @@ class DateListCellState extends ConsumerState<DateListCell> {
                       ],
                     ),
                     Center(
-                      child: Text("Target: ${date.formateDateStringToStandard()}",
+                      child: Text("Target: ${date.formatToStandard()}",
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w200)),
                     )
                   ],

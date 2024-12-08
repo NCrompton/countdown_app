@@ -33,7 +33,7 @@ class FloatingBottomDrawerState extends State<FloatingBottomDrawer> {
         return AnimatedPositioned(
           left: 0,
           right: 0,
-          bottom: widget.visibilityController.visible ? 0 : -panelHeight,
+          bottom: widget.visibilityController.visible ? 0 : -height,
           height: height,
           duration: const Duration(milliseconds: 200),
           curve: Curves.fastEaseInToSlowEaseOut,
@@ -48,6 +48,8 @@ class FloatingBottomDrawerState extends State<FloatingBottomDrawer> {
                   },
                 ),
               ),
+
+              /* Bottom Drawer */
               Container(
                 height: panelHeight - _tapDownPos.dy,
                 decoration: BoxDecoration(
@@ -88,6 +90,7 @@ class FloatingBottomDrawerState extends State<FloatingBottomDrawer> {
                       },
                       child: _buildDragToDismissSection(),
                     ),
+
                     /* Panel content */
                     Expanded(
                       child: widget.child,
@@ -120,43 +123,87 @@ class FloatingBottomDrawerState extends State<FloatingBottomDrawer> {
   }
 }
 
-class FloatingBottomDrawerPage extends StatefulWidget {
-  final Widget Function(BuildContext, VisibilityController) build;
-  final Widget drawerChild;
+abstract class FloatingBottomDrawerWrapper extends StatelessWidget{
+  final Widget Function(BuildContext, VisibilityController) builder;
+  final Widget Function(void Function() dismiss) drawerChild;
+  final VisibilityController? controller;
   final double heightPortion;
 
-  const FloatingBottomDrawerPage({
-    super.key, 
-    required this.build,  
+  const FloatingBottomDrawerWrapper({
+    super.key,
+    required this.builder,  
     required this.drawerChild,
+    this.controller,
     this.heightPortion=0.8,
   });
-
-  @override
-  State<FloatingBottomDrawerPage> createState() => _FloatingBottomDrawerPageState();
 }
 
-class _FloatingBottomDrawerPageState extends State<FloatingBottomDrawerPage> {
+class FloatingBottomDrawerPage extends FloatingBottomDrawerWrapper{
+  const FloatingBottomDrawerPage({
+    super.key, 
+    required super.builder,  
+    required super.drawerChild,
+    super.controller,
+    super.heightPortion,
+  });
 
-  final VisibilityController _visibilityController = VisibilityController(false);
 
   @override
   Widget build(BuildContext context) {
+  final visibilityController = controller ?? VisibilityController(false);
+
     return SafeArea(
         child: Stack(
           children: [
-            GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: () => _visibilityController.setVisibility(false),
-              child: widget.build(context, _visibilityController),
-            ),
+            builder(context, visibilityController),
             FloatingBottomDrawer(
-              visibilityController: _visibilityController,
-              heightPortion: widget.heightPortion,
-              child: widget.drawerChild, 
+              visibilityController: visibilityController,
+              heightPortion: heightPortion,
+              child: drawerChild(() => visibilityController.setVisibility(false)), 
             ),
           ]
         )
+    );
+  }
+}
+
+class FloatingBottomDrawerScaffold extends FloatingBottomDrawerWrapper {
+  final String title;
+
+  const FloatingBottomDrawerScaffold({
+    super.key, 
+    required this.title,
+    required super.builder,
+    required super.drawerChild,
+    super.controller,
+    super.heightPortion,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+  final visibilityController = controller ?? VisibilityController(false);
+
+    return ListenableBuilder(listenable: visibilityController, builder: (BuildContext context, Widget? child){ 
+      return GestureDetector(
+                    onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+                    child: CupertinoPageScaffold(
+                      resizeToAvoidBottomInset: false,
+                      navigationBar: CupertinoNavigationBar(
+                        middle: Text(title),
+                        trailing: IconButton(
+                          onPressed: visibilityController.toggleVisibility, 
+                          icon: Icon(visibilityController.visible ? Icons.close : Icons.add)
+                        ),
+                      ),
+                      child: FloatingBottomDrawerPage(
+                        heightPortion: heightPortion,
+                        controller: visibilityController,
+                        drawerChild: drawerChild,
+                        builder: builder,
+                      ),
+                    )
+                  );
+                }
     );
   }
 }

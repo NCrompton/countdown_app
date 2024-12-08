@@ -1,32 +1,34 @@
 import 'package:calendar/components/list_cell.dart';
 import 'package:calendar/layout/floating_bottom_drawer.dart';
-import 'package:calendar/model/budget_model.dart';
+import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/pages/add_budget_entry_page.dart';
+import 'package:calendar/screens/budget_entry_page.dart';
+import 'package:calendar/providers/budget_entry_provider.dart';
 import 'package:calendar/utils/const.dart';
 import 'package:calendar/utils/date_util.dart';
 import 'package:calendar/utils/route_transition.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class BudgetThreadPage extends StatefulWidget {
+class BudgetThreadPage extends ConsumerStatefulWidget {
   final BudgetThread thread;
   const BudgetThreadPage({super.key, required this.thread});
 
   @override
-  State<BudgetThreadPage> createState() => _BudgetThreadPageState();
+  ConsumerState<BudgetThreadPage> createState() => _BudgetThreadPageState();
 }
 
-class _BudgetThreadPageState extends State<BudgetThreadPage> {
+class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
 
-  // final visibilityController = VisibilityController(false);
-  
   @override
   Widget build(BuildContext context) {
-    final budgets = widget.thread.budgets;
+    // final budgets = widget.thread.budgets;
+    final budgets = ref.watch(budgetThreadEntryProviderProvider(widget.thread.id)).value;
     return FloatingBottomDrawerPage(
       heightPortion: 0.7,
-      drawerChild: const AddBudgetEntryPage(),
-      build: (context, visibilityController) {
+      drawerChild: (dismiss) => AddBudgetEntryPage(thread: widget.thread, dismiss: dismiss),
+      builder: (context, visibilityController) {
         return CustomScrollView(
                     slivers: [
                       CupertinoSliverRefreshControl(
@@ -34,24 +36,22 @@ class _BudgetThreadPageState extends State<BudgetThreadPage> {
                         },
                       ),
                       SliverToBoxAdapter(
-                        child: (budgets.isEmpty) 
-                          ? const SizedBox() 
-                          : CupertinoListSection(
-                              children: [...budgets.map((entry) {
+                        child: CupertinoListSection(
+                              children: [...budgets?.map((entry) {
                                   return Builder(
                                     builder: (context) {
                                       return BudgetEntryCell(
                                         onTap: () {
                                           openPageSide(
                                             context, 
-                                            Container(),
+                                            BudgetEntryPage(entry: entry),
                                           );
                                         },
                                         entry: entry,
                                       );
                                     },
                                   );
-                                }).toList(),
+                                }).toList() ?? [],
                                 BudgetEntryAddCell(onTap: () => visibilityController.setVisibility(true)), 
                               ]
                             ),

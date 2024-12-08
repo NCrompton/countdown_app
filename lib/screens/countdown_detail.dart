@@ -69,7 +69,7 @@ class CountdownDateDetail extends ConsumerStatefulWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(isbeforeNow? "Since" : "To"),
-                        Text(widget.countdown.date.formateDateStringToStandard()),
+                        Text(widget.countdown.date.formatToStandard()),
                         Text(
                           "${diff.inDays}d ${diff.inHours - diff.inDays*24}h ${diff.inMinutes - diff.inHours*60}m",
                           style: const TextStyle(fontSize: 32),

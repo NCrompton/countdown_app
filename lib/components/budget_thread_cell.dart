@@ -1,4 +1,4 @@
-import 'package:calendar/model/budget_model.dart';
+import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/utils/date_util.dart';
 import 'package:flutter/material.dart';
 

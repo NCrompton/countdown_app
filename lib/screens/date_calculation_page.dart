@@ -67,7 +67,7 @@ class _DateSelectionPageState extends ConsumerState<DateCalculationPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _dateController.result.formateDateStringToStandard(),
+                      _dateController.result.formatToStandard(),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
