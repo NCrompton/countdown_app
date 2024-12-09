@@ -31,30 +31,38 @@ class BudgetThreadList extends ConsumerWidget {
                     },
                   ),
                   SliverToBoxAdapter(
+                    child: CustomListCell(
+                      leftWidget: const Text("All Entries"), 
+                      onTap: () => openPageSide(
+                        context,
+                        Container(),
+                      )
+                    ),
+                  ),
+                  SliverToBoxAdapter(
                     child: switch(threadsProvider) {
                       AsyncData(:final value) => value.isEmpty? 
                         const SizedBox(child: Text("nothing")) : 
                         CupertinoListSection(
-                            children: value.mapIndexed((thread, i) {
-                              return Builder(
-                                builder: (context) {
-                                  return BudgetThreadCell(
-                                    onTap: () {
-                                      openPageSide(
-                                        context, 
-                                        SwipeableTabView(
-                                          pages: value.map((e) => BudgetThreadPage(thread: e)).toList(),
-                                          tabNames: value.map((e) => e.threadName).toList(),
-                                          initialPage: i,
-                                        ),
-                                      );
-                                    },
-                                    thread: thread,
-                                  );
-                                },
-                              );
-                            }).toList(),
-                          ),
+                          children: value.mapIndexed((thread, i) {
+                            return Builder(
+                              builder: (context) {
+                                return BudgetThreadCell(
+                                  onTap: () =>
+                                    openPageSide(
+                                      context, 
+                                      SwipeableTabView(
+                                        pages: value.map((e) => BudgetThreadPage(thread: e)).toList(),
+                                        tabNames: value.map((e) => e.threadName).toList(),
+                                        initialPage: i,
+                                      ),
+                                    ),
+                                  thread: thread,
+                                );
+                              },
+                            );
+                          }).toList(),
+                        ),
                       AsyncError(:final error) => Text("Error: $error"),
                       _ => const Center(child: CircularProgressIndicator()), 
                     }
@@ -76,8 +84,8 @@ class BudgetThreadCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListCell(
       onTap: onTap,
-      leftWidget: CellTitle(primaryTitle: thread.threadName, 
-        secondaryTitle: "${thread.budgets.firstOrNull?.entryTime.formatToShortDisplay()} - ${thread.budgets.lastOrNull?.entryTime.formatToShortDisplay()}",)
+      leftWidget: Text(thread.threadName), 
+      subLeftWidget: Text( "${thread.budgets.firstOrNull?.entryTime.formatToShortDisplay()} - ${thread.budgets.lastOrNull?.entryTime.formatToShortDisplay()}"),
     );
   }
 }

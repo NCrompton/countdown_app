@@ -69,30 +69,21 @@ class BudgetEntryCell extends StatelessWidget {
   final BudgetEntry entry;
   final GestureTapCallback? onTap;
 
-
   @override
   Widget build(BuildContext context) {
     return ListCell(
-      leftWidget: _leftWidget(),
+      onTap: onTap,
+      leftWidget: Text(entry.entryName),
+      subLeftWidget: Text(entry.entryTime.formatToDisplay()),
       rightWidget: Text("${entry.price.currency.name.toUpperCase()} ${entry.price.value}", 
         style: TextStyle(color: entry.price.value < 0 ? const Color(negativeColor) : const Color(positiveColor))
       ),
-      onTap: onTap,
+      leading: CircleAvatar(
+        backgroundColor: entry.entryType.color,
+        foregroundColor: entry.entryType.color.computeLuminance() > 0.5 ? Colors.black : Colors.white,
+        child: Icon(entry.entryType.icon),
+      ),
     );
-  }
-
-  Widget _leftWidget() {
-    return Row(
-        children:[
-          CircleAvatar(
-            backgroundColor: entry.entryType.color,
-            foregroundColor: entry.entryType.color.computeLuminance() > 0.5 ? Colors.black : Colors.white,
-            child: Icon(entry.entryType.icon),
-          ),
-          const SizedBox(width: 8),
-          CellTitle(primaryTitle: entry.entryName, secondaryTitle: entry.entryTime.formatToDisplay(),)
-        ],
-      );
   }
 }
 
