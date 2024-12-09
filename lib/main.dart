@@ -1,4 +1,5 @@
 import 'package:calendar/app.dart';
+import 'package:calendar/services/provider_watcher.dart';
 import 'package:calendar/utils/const.dart';
 import 'package:calendar/utils/storage.dart';
 import 'package:calendar/utils/widget.dart';
@@ -13,8 +14,9 @@ void main() {
   HomeWidget.registerInteractivityCallback(budgetWidgetCallback);
 
   runApp(
-    const ProviderScope(
-      child: App(),
+    ProviderScope(
+      observers: [ProjectObserver()],
+      child: const App(),
     ),
   );
 }

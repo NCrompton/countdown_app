@@ -7,7 +7,7 @@ part of 'budget_entry_provider.dart';
 // **************************************************************************
 
 String _$budgetEntriesProviderHash() =>
-    r'4ba26204d10ee37a5831e746a2c752b8e150bf91';
+    r'8383ef2c8e8875e42d1840c3e88e82553f626d3e';
 
 /// See also [BudgetEntriesProvider].
 @ProviderFor(BudgetEntriesProvider)
