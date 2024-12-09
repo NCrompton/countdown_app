@@ -1,4 +1,5 @@
 import 'package:calendar/components/input_value_row.dart';
+import 'package:calendar/dummy/dummy_data.dart';
 import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/providers/budget_entry_provider.dart';
 import 'package:calendar/utils/date_util.dart';
@@ -30,13 +31,7 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
   int _selectedType = 0;
 
   final List<Currency> _currencies = Currency.values;
-  final List<BudgetEntryType> _entryTypes = [
-    BudgetEntryType.defaultType(), 
-    BudgetEntryType(name: 'Food', iconDataParam: Icons.fastfood.codePoint), 
-    BudgetEntryType(name: 'Transport', iconDataParam: Icons.train.codePoint), 
-    BudgetEntryType(name: 'Entertainment', iconDataParam: Icons.tv.codePoint), 
-    BudgetEntryType(name: 'Shopping', iconDataParam: Icons.shopping_bag.codePoint)
-  ];
+  final List<BudgetEntryType> _entryTypes = entryTypes;
 
   void _showAddTypeDialog() {
     showCupertinoDialog(

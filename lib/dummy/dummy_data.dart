@@ -1,5 +1,4 @@
 import 'package:calendar/model/budget_schema.dart';
-import 'package:flutter/material.dart';
 
 // final dummyBudgetThread = [
 //     BudgetThread(threadName: "Test2", preferredCurrency: Currency.hkd ,budgets: [
@@ -28,8 +27,8 @@ final List<BudgetThread> dummyBudgetThread = [thread1, thread2, thread3];
 
 final List<BudgetEntryType> entryTypes = [
   BudgetEntryType.defaultType(), 
-  BudgetEntryType(name: 'Food', iconDataParam: Icons.fastfood.codePoint), 
-  BudgetEntryType(name: 'Transport', iconDataParam: Icons.train.codePoint), 
-  BudgetEntryType(name: 'Entertainment', iconDataParam: Icons.tv.codePoint), 
-  BudgetEntryType(name: 'Shopping', iconDataParam: Icons.shopping_bag.codePoint)
+  BudgetEntryType.foodType(), 
+  BudgetEntryType.transportType(), 
+  BudgetEntryType.entertainmentType(), 
+  BudgetEntryType.shoppingType(), 
 ];

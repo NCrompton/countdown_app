@@ -81,8 +81,16 @@ class BudgetEntryType {
     iconData = iconDataParam ?? Icons.accessibility.codePoint, 
     colorInt = colorParam ?? (Random().nextDouble() * 0xFFFFFF).toInt();
 
-  static final BudgetEntryType _defaultType = BudgetEntryType(name: "Generic");
+  static final BudgetEntryType _defaultType = BudgetEntryType(name: "Generic", colorParam: Colors.grey.value);
+  static final BudgetEntryType _foodType = BudgetEntryType(name: 'Food', iconDataParam: Icons.fastfood.codePoint, colorParam: Colors.orange.value); 
+  static final BudgetEntryType _transportType = BudgetEntryType(name: 'Transport', iconDataParam: Icons.train.codePoint, colorParam: Colors.green.value);
+  static final BudgetEntryType _entertainmentType = BudgetEntryType(name: 'Entertainment', iconDataParam: Icons.tv.codePoint, colorParam: Colors.amber.value); 
+  static final BudgetEntryType _shoppingType = BudgetEntryType(name: 'Shopping', iconDataParam: Icons.shopping_bag.codePoint, colorParam: Colors.red.value);
   factory BudgetEntryType.defaultType() => _defaultType;
+  factory BudgetEntryType.foodType() => _foodType;
+  factory BudgetEntryType.transportType() => _transportType;
+  factory BudgetEntryType.entertainmentType() => _entertainmentType;
+  factory BudgetEntryType.shoppingType() => _shoppingType;
 
   @ignore
   IconData get icon => IconData(iconData, fontFamily: "MaterialIcons");
