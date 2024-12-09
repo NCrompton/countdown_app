@@ -1,4 +1,5 @@
 import 'package:calendar/model/budget_schema.dart';
+import 'package:calendar/utils/budget_util.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -59,7 +60,8 @@ class BudgetDatabase {
   }
 
   Future<List<BudgetEntry>> getEntriesFromThread(Id threadId) async {
-    return (await _isar.budgetThreads.filter().idEqualTo(threadId).findFirst())!.budgets.toList();
+    return (await _isar.budgetThreads.filter().idEqualTo(threadId).findFirst())!.budgets.toList()
+      ..sortByCreateTimeAsc();
   }
 
   Future<Id> createEntry(BudgetEntry entry) async {
@@ -75,7 +77,7 @@ class BudgetDatabase {
   }
 
   Future<List<BudgetEntry>> getAllEntries() async {
-    return _isar.budgetEntrys.where().findAll();
+    return _isar.budgetEntrys.where().sortByEntryTime().findAll();
   }
 
   Future<bool> deleteEntry(Id id) async {

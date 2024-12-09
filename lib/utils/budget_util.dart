@@ -19,3 +19,9 @@ extension BudgetThreadUtil on BudgetThread {
     return budgets.last.entryTime;
   }
 }
+
+extension BudgetEntryListUtil on List<BudgetEntry> {
+  void sortByCreateTimeAsc() {
+    sort((a, b) => a.entryTime.compareTo(b.entryTime));
+  }
+}
