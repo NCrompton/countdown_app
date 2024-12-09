@@ -9,11 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AddBudgetEntryPage extends ConsumerStatefulWidget {
   final void Function()? dismiss;
-  final BudgetThread thread;
+  final BudgetThread? thread;
 
   const AddBudgetEntryPage({
     super.key, 
-    required this.thread,
+    this.thread,
     this.dismiss,
   });
 
@@ -176,7 +176,12 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
       threadParam: widget.thread,
     );
     // TODO: check success
-    ref.read(budgetThreadEntryProviderProvider(widget.thread.id).notifier).addNewEntry(entry);
+    if (widget.thread != null) {
+      ref.read(budgetThreadEntryProviderProvider(widget.thread!.id).notifier).addNewEntry(entry);
+    } else {
+      ref.read(budgetEntriesProviderProvider.notifier).addEntries(entry);
+    }
+      
 
     _resetForm();
     if (widget.dismiss != null) widget.dismiss!();
@@ -229,6 +234,8 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // TODO: thread picker
+
                   InputValueRow(controller: _nameController, placeholder: "Entry Name"),
                   const SizedBox(height: 16),
     

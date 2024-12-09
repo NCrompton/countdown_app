@@ -1,4 +1,5 @@
 import 'package:calendar/components/list_cell.dart';
+import 'package:calendar/layout/project_scaffold.dart';
 import 'package:calendar/layout/swipeable_tab_view.dart';
 import 'package:calendar/layout/floating_bottom_drawer.dart';
 import 'package:calendar/model/budget_schema.dart';
@@ -27,15 +28,18 @@ class BudgetThreadList extends ConsumerWidget {
         return CustomScrollView(
                 slivers: [
                   CupertinoSliverRefreshControl(
-                    onRefresh: () async {
-                    },
+                    onRefresh: () =>
+                      ref.refresh(budgetThreadProviderProvider.future),
                   ),
                   SliverToBoxAdapter(
                     child: CustomListCell(
                       leftWidget: const Text("All Entries"), 
                       onTap: () => openPageSide(
                         context,
-                        Container(),
+                        const ProjectScaffold(
+                          title: "All Entries",
+                          child: BudgetThreadPage(),
+                        ),
                       )
                     ),
                   ),

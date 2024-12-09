@@ -12,8 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BudgetThreadPage extends ConsumerStatefulWidget {
-  final BudgetThread thread;
-  const BudgetThreadPage({super.key, required this.thread});
+  final BudgetThread? thread;
+  const BudgetThreadPage({super.key, this.thread});
 
   @override
   ConsumerState<BudgetThreadPage> createState() => _BudgetThreadPageState();
@@ -24,7 +24,9 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
   @override
   Widget build(BuildContext context) {
     // final budgets = widget.thread.budgets;
-    final budgets = ref.watch(budgetThreadEntryProviderProvider(widget.thread.id)).value;
+    final budgets = (widget.thread != null)
+      ? ref.watch(budgetThreadEntryProviderProvider(widget.thread!.id)).value
+      : ref.watch(budgetEntriesProviderProvider).value;
     return FloatingBottomDrawerPage(
       heightPortion: 0.7,
       drawerChild: (dismiss) => AddBudgetEntryPage(thread: widget.thread, dismiss: dismiss),
@@ -32,8 +34,10 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
         return CustomScrollView(
                     slivers: [
                       CupertinoSliverRefreshControl(
-                        onRefresh: () async {
-                        },
+                        onRefresh: () => 
+                          (widget.thread != null)
+                            ? ref.refresh(budgetThreadEntryProviderProvider(widget.thread!.id).future)
+                            : ref.refresh(budgetEntriesProviderProvider.future),
                       ),
                       SliverToBoxAdapter(
                         child: CupertinoListSection(

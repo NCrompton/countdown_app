@@ -27,10 +27,9 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     state = const AsyncLoading();
 
     final db = await BudgetDatabase.getInstance();
-    db.createEntry(entry);
+    await db.createEntry(entry);
 
-    final entries = await _fetchAllEntries();
-    state = AsyncValue.data(entries);
+    state = AsyncValue.data(await _fetchAllEntries());
   }
 
   Future<BudgetEntry?> getEntries(Id id) async {
@@ -41,12 +40,15 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
   Future<bool> updateEntry(BudgetEntry entry) async {
     state = const AsyncLoading();
 
+    bool success = true;
     final db = await BudgetDatabase.getInstance();
-    if (await db.updateEntry(entry)) {
-      state = AsyncData(await _fetchAllEntries());
-      return true;
-    } 
-    return false;
+    state = await AsyncValue.guard(() async {
+      await db.updateEntry(entry);
+
+      return _fetchAllEntries();
+    }, (_) => success = false);
+    
+    return success;
   }
 
   Future<bool> deleteEntry(Id id) async {
