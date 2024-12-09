@@ -123,11 +123,11 @@ class PageIndicator extends StatelessWidget {
             ),
           ),
           SizedBox(
-            height: 20,
+            height: 24,
             width: MediaQuery.of(context).size.width - 128,
             child: TabBarView(
               controller: tabController,
-              children: tabNames.map((e) => Center(child: Text(e))).toList(),
+              children: tabNames.map((e) => Center(child: Text(e, style: const TextStyle(fontSize: 18),))).toList(),
             )
           ),
           IconButton(
