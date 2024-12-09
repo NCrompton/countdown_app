@@ -1,6 +1,7 @@
 
 import 'package:calendar/components/picker_wrapper.dart';
 import 'package:calendar/controllers/input_controller.dart';
+import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/utils/const.dart';
 import 'package:calendar/utils/date_util.dart';
 import 'package:flutter/cupertino.dart';
@@ -71,9 +72,10 @@ class _EntryAttributeRowState<T> extends State<EntryAttributeRow<T>> {
 
   Widget? _buildEnumInputWidget() {
     if (widget.enumList == null) return null;
+    //TODO: Why T is not ProjectEnum
 
     return PickerWrapper(
-      text: (widget.inputController.value as Enum).name,
+      text: (widget.inputController.value as ProjectEnum).displayName,
       picker: CupertinoPicker(
         magnification: 1.22,
         squeeze: 1.2,
@@ -82,7 +84,7 @@ class _EntryAttributeRowState<T> extends State<EntryAttributeRow<T>> {
         onSelectedItemChanged: (int selectedItem) =>
           widget.inputController.set(widget.enumList![selectedItem]),
         children: widget.enumList!.map((type) => Center(
-          child: Text((type as Enum).name),
+          child: Text((type as ProjectEnum).displayName),
         )).toList(),
       ));
   }
@@ -93,6 +95,8 @@ class _EntryAttributeRowState<T> extends State<EntryAttributeRow<T>> {
       {(widget.inputController as InputController<int>).set(int.parse(v));}
     else if (T == double && double.tryParse(v) != null)
       {(widget.inputController as InputController<double>).set(double.parse(v));}
+    else if (T == String)
+      {(widget.inputController as InputController<String>).set(v);}
   }
 
   @override
@@ -102,10 +106,12 @@ class _EntryAttributeRowState<T> extends State<EntryAttributeRow<T>> {
       child: (!widget.allowExitEditing && isEditing) ? const SizedBox() 
       : IconButton(
         icon: !isEditing ? const Icon(CupertinoIcons.pencil) : const Icon(CupertinoIcons.check_mark),
-        onPressed: () =>
+        onPressed: () {
+          widget.inputController.notifyListeners();
           setState(() {
             isEditing = !isEditing;
-          }),
+          });
+        }
       ),
       builder: (context, child) {
         return Container(
@@ -122,7 +128,11 @@ class _EntryAttributeRowState<T> extends State<EntryAttributeRow<T>> {
                       width: MediaQuery.of(context).size.width * 0.2,
                       child: Text(widget.attributeName)
                     ),
-                    Text(widget.attributeValueString ?? widget.inputController.value.toString())
+                    Text(
+                      (T is ProjectEnum)
+                      ? (widget.inputController.value as ProjectEnum).displayName 
+                      : widget.attributeValueString ?? widget.inputController.value.toString()
+                    )
                   ])
                   : T == String? _buildStringInputWidget()
                   : T == int || T == double? _buildIntInputWidget()

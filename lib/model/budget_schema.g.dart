@@ -109,11 +109,19 @@ P _budgetThreadDeserializeProp<P>(
 const _BudgetThreadpreferredCurrencyEnumValueMap = {
   r'hkd': r'hkd',
   r'jpy': r'jpy',
+  r'usd': r'usd',
+  r'thb': r'thb',
+  r'rmb': r'rmb',
+  r'ntw': r'ntw',
   r'euro': r'euro',
 };
 const _BudgetThreadpreferredCurrencyValueEnumMap = {
   r'hkd': Currency.hkd,
   r'jpy': Currency.jpy,
+  r'usd': Currency.usd,
+  r'thb': Currency.thb,
+  r'rmb': Currency.rmb,
+  r'ntw': Currency.ntw,
   r'euro': Currency.euro,
 };
 
@@ -1443,11 +1451,19 @@ P _localizedPriceDeserializeProp<P>(
 const _LocalizedPricecurrencyEnumValueMap = {
   r'hkd': r'hkd',
   r'jpy': r'jpy',
+  r'usd': r'usd',
+  r'thb': r'thb',
+  r'rmb': r'rmb',
+  r'ntw': r'ntw',
   r'euro': r'euro',
 };
 const _LocalizedPricecurrencyValueEnumMap = {
   r'hkd': Currency.hkd,
   r'jpy': Currency.jpy,
+  r'usd': Currency.usd,
+  r'thb': Currency.thb,
+  r'rmb': Currency.rmb,
+  r'ntw': Currency.ntw,
   r'euro': Currency.euro,
 };
 

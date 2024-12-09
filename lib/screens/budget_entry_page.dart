@@ -11,7 +11,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class BudgetEntryPage extends ConsumerWidget {
+class BudgetEntryPage extends ConsumerStatefulWidget {
   final BudgetEntry entry;
 
   const BudgetEntryPage({
@@ -19,26 +19,26 @@ class BudgetEntryPage extends ConsumerWidget {
     required this.entry,
   });
 
-  InputController<String> get _nameController => InputController(entry.entryName);
-  InputController<double> get _priceController => InputController(entry.price.value);
-  InputController<Currency> get _currencyController => InputController(entry.price.currency);
-  InputController<DateTime> get _createDateController => InputController(entry.entryTime);
-  InputController<BudgetEntryType> get _typeController => InputController(entry.entryType);
+  @override
+  ConsumerState<BudgetEntryPage> createState() => _BudgetEntryPageState();
+}
 
-  BudgetEntry get newEntry => entry
-      ..entryName = _nameController.value
-      ..entryTime = _createDateController.value
-      ..entryType = _typeController.value
-      ..price.value = _priceController.value
-      ..price.currency = _currencyController.value;
+class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
+  InputController<String> _nameController = InputController("");
+  InputController<double> _priceController = InputController(0.0);
+  InputController<Currency> _currencyController = InputController(Currency.hkd);
+  InputController<DateTime> _createDateController = InputController(DateTime.now());
+  InputController<BudgetEntryType> _typeController = InputController(BudgetEntryType.defaultType());
 
-  List<ChangedValue> get targets => [
-    ChangedValue(name: "Name", oldValue: entry.entryName, newValue: newEntry.entryName),
-    ChangedValue(name: "Price", oldValue: entry.price.value.toString(), newValue: newEntry.price.value.toString()),
-    ChangedValue(name: "Currency", oldValue: entry.price.currency.name, newValue: newEntry.price.currency.name),
-    ChangedValue(name: "Create Time", oldValue: entry.entryTime.formatToDisplay(), newValue: newEntry.entryTime.formatToDisplay()),
-    ChangedValue(name: "Type", oldValue: entry.entryType.typeName, newValue: newEntry.entryType.typeName),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _nameController = InputController(widget.entry.entryName);    
+    _priceController = InputController(widget.entry.price.value);    
+    _currencyController = InputController(widget.entry.price.currency);    
+    _typeController = InputController(widget.entry.entryType);
+    _createDateController = InputController(widget.entry.entryTime);
+  }
 
   Widget _buildTypeInputWidget(BuildContext context) {
     return PickerWrapper(
@@ -58,56 +58,100 @@ class BudgetEntryPage extends ConsumerWidget {
     );
   }
 
-  void _updateEntry(WidgetRef ref) {
+  Widget _buildListener({required Widget Function(BuildContext, Widget?) builder, Widget? child}) {
+    return ListenableBuilder(
+      listenable: _nameController, 
+      child: child,
+      builder: (context, c) =>
+        ListenableBuilder(
+          listenable: _createDateController,
+          builder: (context, _) => 
+          ListenableBuilder(
+            listenable: _currencyController,
+            builder: (context, _) => 
+            ListenableBuilder(
+              listenable: _priceController,
+              builder: (context, _) => 
+              ListenableBuilder(
+                listenable: _typeController,
+                builder: (context, _) => builder(context, c),
+              )
+            )
+          )
+        )
+    );
+  }
+
+  Widget _buildPreview(void Function() dismiss) {
+     BudgetEntry newEntry = BudgetEntry.copy(widget.entry);
+     newEntry = newEntry
+      ..entryName = _nameController.value
+      ..entryTime = _createDateController.value
+      ..entryType = _typeController.value
+      ..price.value = _priceController.value
+      ..price.currency = _currencyController.value;
+
+
+    return ChangedValuePreview(
+      targets: [
+        ChangedValue(name: "Name", oldValue: widget.entry.entryName, newValue: newEntry.entryName),
+        ChangedValue(name: "Price", oldValue: widget.entry.price.value.toString(), newValue: newEntry.price.value.toString()),
+        ChangedValue(name: "Currency", oldValue: widget.entry.price.currency.displayName, newValue: newEntry.price.currency.displayName),
+        ChangedValue(name: "Create Time", oldValue: widget.entry.entryTime.formatToDisplay(), newValue: newEntry.entryTime.formatToDisplay()),
+        ChangedValue(name: "Type", oldValue: widget.entry.entryType.typeName, newValue: newEntry.entryType.typeName),
+      ],
+      onConfirm:() {
+        _updateEntry(ref, newEntry);
+        dismiss();
+      },
+      onReject: dismiss,
+    );
+  }
+
+  void _updateEntry(WidgetRef ref, BudgetEntry newEntry) {
     ref.read(budgetEntriesProviderProvider.notifier).updateEntry(newEntry);
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-
+  Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      resizeToAvoidBottomInset: false,
-      navigationBar: CupertinoNavigationBar(
-        middle: Text(entry.entryName),
-      ),
-      child: FloatingBottomDrawerPage(
-        heightPortion: 0.6,
-        drawerChild: (dismiss) => ChangedValuePreview(
-          targets: targets,
-          onConfirm:() {
-            _updateEntry(ref);
-            dismiss();
-          },
-          onReject: dismiss,
+        resizeToAvoidBottomInset: false,
+        navigationBar: CupertinoNavigationBar(
+          middle: Text(widget.entry.entryName),
         ),
-        builder: (context, visibilityController) {
-         return  Container(
-          color: CupertinoColors.secondarySystemBackground,
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            children: [
-              Expanded(
-                child: Column(
-                  children: [
-                    EntryAttributeRow<String>(attributeName: "Name", inputController: _nameController,),
-                    EntryAttributeRow<double>(attributeName: "Price", inputController: _priceController,),
-                    EntryAttributeRow<Currency>(attributeName: "Currency", attributeValueString: _currencyController.value.name.toUpperCase(), inputController: _currencyController, enumList:Currency.values, allowExitEditing: false,),
-                    EntryAttributeRow<DateTime>(attributeName: "Create Time", attributeValueString: _createDateController.value.formatToDisplay(), inputController: _createDateController, allowExitEditing: false,),
-                    EntryAttributeRow<BudgetEntryType>(attributeName: "Type", attributeValueString: _typeController.value.typeName, inputController: _typeController, customInput: _buildTypeInputWidget(context), allowExitEditing: false,),
-                  ],
-                ),
+        child: _buildListener(
+          builder: (context, child) => FloatingBottomDrawerPage(
+            heightPortion: 0.6,
+            drawerChild: _buildPreview,
+            builder: (context, visibilityController) {
+            return  Container(
+              color: CupertinoColors.secondarySystemBackground,
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Column(
+                      children: [
+                        EntryAttributeRow<String>(attributeName: "Name", inputController: _nameController,),
+                        EntryAttributeRow<double>(attributeName: "Price", inputController: _priceController,),
+                        EntryAttributeRow<Currency>(attributeName: "Currency", attributeValueString: _currencyController.value.name.toUpperCase(), inputController: _currencyController, enumList:Currency.values),
+                        EntryAttributeRow<DateTime>(attributeName: "Create Time", attributeValueString: _createDateController.value.formatToDisplay(), inputController: _createDateController),
+                        EntryAttributeRow<BudgetEntryType>(attributeName: "Type", attributeValueString: _typeController.value.typeName, inputController: _typeController, customInput: _buildTypeInputWidget(context)),
+                      ],
+                    ),
+                  ),
+                  CupertinoButton.filled(
+                    onPressed: () {
+                      visibilityController.setVisibility(true);
+                    },
+                    child: const Text("Update Budget"), 
+                  )
+                ],
               ),
-              CupertinoButton.filled(
-                onPressed: () {
-                  visibilityController.setVisibility(true);
-                },
-                child: const Text("Update Budget"), 
-              )
-            ],
-          ),
-        );
-        }
-      )
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -154,7 +198,7 @@ class ChangedValuePreview extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ),
-                ...!target.isChange
+                ...target.isChange
                 ? _buildChangesRow(target)
                 : _buildNonChangeRow(target),
               ]
@@ -232,20 +276,3 @@ class ChangedValuePreview extends StatelessWidget {
     );
   }
 }
-
-// class BudgetEntryListenable extends StatelessWidget {
-//   InputController<String> get _nameController => InputController(entry.entryName);
-//   InputController<double> get _priceController => InputController(entry.price.value);
-//   InputController<Currency> get _currencyController => InputController(entry.price.currency);
-//   InputController<DateTime> get _createDateController => InputController(entry.entryTime);
-//   InputController<BudgetEntryType> get _typeController => InputController(entry.entryType);
-
-//   const BudgetEntryListenable({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return ListenableBuilder(
-//       listenable: 
-//       builder: builder);
-//   }
-// }

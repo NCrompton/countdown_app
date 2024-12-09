@@ -41,6 +41,14 @@ class BudgetEntry {
     entryTime = time ?? DateTime.now(), 
     entryType = type ?? BudgetEntryType._defaultType,
     thread = IsarLink<BudgetThread>()..value = threadParam;
+    
+  BudgetEntry.copy(BudgetEntry entry):
+    entryName = entry.entryName,
+    price = LocalizedPrice.copy(entry.price),
+    thread = entry.thread,
+    entryType = entry.entryType,
+    entryTime = entry.entryTime,
+    id = entry.id;
 }
 
 @embedded
@@ -53,6 +61,10 @@ class LocalizedPrice {
     double? valueParam,
     Currency? currencyParam
   }): value = valueParam ?? 0, currency = currencyParam ?? Currency.hkd;
+
+  LocalizedPrice.copy(LocalizedPrice price):
+    currency = price.currency,
+    value = price.value;
 }
 
 @embedded
@@ -79,10 +91,17 @@ class BudgetEntryType {
   Color get color => Color(colorInt).withOpacity(1.0);
 }
 
-enum Currency {
+enum Currency with ProjectEnum{
   hkd,
   jpy, 
+  usd,
+  thb,
+  rmb,
+  ntw,
   euro;
+
+  @override
+  String get displayName => name.toUpperCase();
 
   static Currency? fromText(String cur) {
     for (var v in Currency.values) {
@@ -92,6 +111,10 @@ enum Currency {
   } 
 
   static List<String> availableCurrency() {
-    return Currency.values.map((v) => v.name).toList(); 
+    return Currency.values.map((v) => v.displayName).toList(); 
   }
+}
+
+mixin ProjectEnum on Enum{
+  String get displayName => name;
 }
