@@ -192,5 +192,24 @@ class _BudgetThreadEntryProviderProviderElement
   @override
   int get threadId => (origin as BudgetThreadEntryProviderProvider).threadId;
 }
+
+String _$budgetEntryTypeProviderHash() =>
+    r'25183a9c756db9f0c65803013efa7cdc86413c5b';
+
+/// See also [BudgetEntryTypeProvider].
+@ProviderFor(BudgetEntryTypeProvider)
+final budgetEntryTypeProviderProvider = AutoDisposeAsyncNotifierProvider<
+    BudgetEntryTypeProvider, List<BudgetEntryType>>.internal(
+  BudgetEntryTypeProvider.new,
+  name: r'budgetEntryTypeProviderProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$budgetEntryTypeProviderHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$BudgetEntryTypeProvider
+    = AutoDisposeAsyncNotifier<List<BudgetEntryType>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

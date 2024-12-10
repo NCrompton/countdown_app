@@ -27,9 +27,12 @@ class BudgetEntry {
   Id id = Isar.autoIncrement;
   String entryName;
   LocalizedPrice price;
-  BudgetEntryType entryType;
   DateTime entryTime;
+  IsarLink<BudgetEntryType> typeLink = IsarLink<BudgetEntryType>();
   IsarLink<BudgetThread> thread = IsarLink<BudgetThread>();
+
+  @ignore
+  BudgetEntryType get entryType => typeLink.value ?? BudgetEntryType.defaultType();
 
   BudgetEntry({
     required this.entryName,
@@ -39,16 +42,16 @@ class BudgetEntry {
     DateTime? time,
   }):
     entryTime = time ?? DateTime.now(), 
-    entryType = type ?? BudgetEntryType._defaultType,
+    typeLink = IsarLink<BudgetEntryType>()..value = type ?? BudgetEntryType._defaultType,
     thread = IsarLink<BudgetThread>()..value = threadParam;
     
   BudgetEntry.copy(BudgetEntry entry):
+    id = entry.id,
     entryName = entry.entryName,
     price = LocalizedPrice.copy(entry.price),
     thread = entry.thread,
-    entryType = entry.entryType,
-    entryTime = entry.entryTime,
-    id = entry.id;
+    typeLink = entry.typeLink,
+    entryTime = entry.entryTime;
 }
 
 @embedded
@@ -67,8 +70,9 @@ class LocalizedPrice {
     value = price.value;
 }
 
-@embedded
+@collection
 class BudgetEntryType {
+  Id id = Isar.autoIncrement;
   String typeName;
   int iconData;
   int colorInt;
@@ -81,11 +85,16 @@ class BudgetEntryType {
     iconData = iconDataParam ?? Icons.accessibility.codePoint, 
     colorInt = colorParam ?? (Random().nextDouble() * 0xFFFFFF).toInt();
 
-  static final BudgetEntryType _defaultType = BudgetEntryType(name: "Generic", colorParam: Colors.grey.value);
-  static final BudgetEntryType _foodType = BudgetEntryType(name: 'Food', iconDataParam: Icons.fastfood.codePoint, colorParam: Colors.orange.value); 
-  static final BudgetEntryType _transportType = BudgetEntryType(name: 'Transport', iconDataParam: Icons.train.codePoint, colorParam: Colors.green.value);
-  static final BudgetEntryType _entertainmentType = BudgetEntryType(name: 'Entertainment', iconDataParam: Icons.tv.codePoint, colorParam: Colors.amber.value); 
-  static final BudgetEntryType _shoppingType = BudgetEntryType(name: 'Shopping', iconDataParam: Icons.shopping_bag.codePoint, colorParam: Colors.red.value);
+  static final BudgetEntryType _defaultType = BudgetEntryType(name: "Generic", colorParam: Colors.grey.value)
+    ..id=1;
+  static final BudgetEntryType _foodType = BudgetEntryType(name: 'Food', iconDataParam: Icons.fastfood.codePoint, colorParam: Colors.orange.value)
+    ..id=2; 
+  static final BudgetEntryType _transportType = BudgetEntryType(name: 'Transport', iconDataParam: Icons.train.codePoint, colorParam: Colors.green.value)
+    ..id=3;
+  static final BudgetEntryType _entertainmentType = BudgetEntryType(name: 'Entertainment', iconDataParam: Icons.tv.codePoint, colorParam: Colors.amber.value)
+    ..id=4; 
+  static final BudgetEntryType _shoppingType = BudgetEntryType(name: 'Shopping', iconDataParam: Icons.shopping_bag.codePoint, colorParam: Colors.red.value)
+    ..id=5;
   factory BudgetEntryType.defaultType() => _defaultType;
   factory BudgetEntryType.foodType() => _foodType;
   factory BudgetEntryType.transportType() => _transportType;

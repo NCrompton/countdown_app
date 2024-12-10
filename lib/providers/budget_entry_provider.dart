@@ -13,8 +13,14 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     return db.getAllEntries();
   }
 
+  // TODO: fix
+  Future<void> notifyThread() async {
+      await ref.read(budgetThreadProviderProvider.notifier).reload();
+  }
+
   @override
   Future<List<BudgetEntry>> build() async {
+    state = const AsyncLoading();
     return _fetchAllEntries();
   }
 
@@ -24,12 +30,11 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
   }
 
   void addEntries(BudgetEntry entry) async {
-    state = const AsyncLoading();
-
     final db = await BudgetDatabase.getInstance();
     await db.createEntry(entry);
 
     state = AsyncValue.data(await _fetchAllEntries());
+    await notifyThread();
   }
 
   Future<BudgetEntry?> getEntries(Id id) async {
@@ -38,8 +43,6 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
   }
 
   Future<bool> updateEntry(BudgetEntry entry) async {
-    state = const AsyncLoading();
-
     bool success = true;
     final db = await BudgetDatabase.getInstance();
     state = await AsyncValue.guard(() async {
@@ -47,13 +50,11 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
 
       return _fetchAllEntries();
     }, (_) => success = false);
-    
+    await notifyThread();
     return success;
   }
 
   Future<bool> deleteEntry(Id id) async {
-    state = const AsyncLoading();
-
     bool success = true;
     state = await AsyncValue.guard(() async {
       final db = await BudgetDatabase.getInstance();
@@ -65,6 +66,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
       }
       return _fetchAllEntries();
     }, (_) => (success = false));
+    await notifyThread();
     return success;
   }
 }
@@ -77,39 +79,42 @@ class BudgetThreadEntryProvider extends _$BudgetThreadEntryProvider {
     return db.getEntriesFromThread(threadId);
   }
 
-  @override
-  Future<List<BudgetEntry>> build(Id threadId) {
-    return _fetchAllEntriesOfThread();
-  }
-
-  Future<bool> addNewEntry(BudgetEntry entry) async {
-    state = const AsyncValue.loading();
-
-    bool success = true;
-
-    state = await AsyncValue.guard(() async {
-      final db = await BudgetDatabase.getInstance();
-
-      await (await BudgetDatabase.getInstance()).createEntry(entry);
-
-      final thread = await db.getThread(threadId);
-
-      thread!.budgets.add(entry);
-      await db.saveEntryToThread(thread);
-
-      // TODO: fix
+  // TODO: fix
+  Future<void> notifyThread() async {
       await ref.read(budgetEntriesProviderProvider.notifier).reload();
       await ref.read(budgetThreadProviderProvider.notifier).reload();
+  }
+
+  @override
+  Future<List<BudgetEntry>> build(Id threadId) {
+    state = const AsyncLoading();
+    return _fetchAllEntriesOfThread();
+  }
+  
+
+  Future<bool> addNewEntry(BudgetEntry entry) async {
+    bool success = true;
+    state = await AsyncValue.guard(() async {
+      (await BudgetDatabase.getInstance()).createEntrySync(entry);
+      await notifyThread();
 
       return await _fetchAllEntriesOfThread();
     }, (_) => (success = false));
+    return success;
+  }
 
+  Future<bool> updateEntryThread(BudgetEntry entry) async {
+    bool success = true;
+    state = await AsyncValue.guard(() async {
+      (await BudgetDatabase.getInstance()).updateEntrySync(entry);
+      await notifyThread();
+
+      return await _fetchAllEntriesOfThread();
+    }, (err) => (success = false));
     return success;
   }
 
   Future<bool> deleteEntry(Id id) async {
-    state = const AsyncLoading();
-
     bool success = true;
     state = await AsyncValue.guard(() async {
       final db = await BudgetDatabase.getInstance();
@@ -125,7 +130,27 @@ class BudgetThreadEntryProvider extends _$BudgetThreadEntryProvider {
 
       return await _fetchAllEntriesOfThread();
     }, (_) => (success = false));
-
     return success;
+  }
+}
+
+@riverpod
+class BudgetEntryTypeProvider extends _$BudgetEntryTypeProvider {
+
+  Future<List<BudgetEntryType>> _fetchAllTypes() async {
+    final db = await BudgetDatabase.getInstance();
+    return db.getAllEntryTypes();
+  }
+
+  @override
+  Future<List<BudgetEntryType>> build() async {
+    state = const AsyncLoading();
+    return _fetchAllTypes();
+  }
+
+  Future<void> createType(BudgetEntryType type) async {
+    final db = await BudgetDatabase.getInstance();
+    await db.createEntryType(type);
+    state = AsyncValue.data(await _fetchAllTypes());
   }
 }

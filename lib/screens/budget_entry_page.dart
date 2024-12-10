@@ -10,6 +10,7 @@ import 'package:calendar/utils/date_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:isar/isar.dart';
 
 class BudgetEntryPage extends ConsumerStatefulWidget {
   final BudgetEntry entry;
@@ -87,7 +88,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
      newEntry = newEntry
       ..entryName = _nameController.value
       ..entryTime = _createDateController.value
-      ..entryType = _typeController.value
+      ..typeLink = (IsarLink<BudgetEntryType>()..value=_typeController.value)
       ..price.value = _priceController.value
       ..price.currency = _currencyController.value;
 

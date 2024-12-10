@@ -747,14 +747,8 @@ const BudgetEntrySchema = CollectionSchema(
       name: r'entryTime',
       type: IsarType.dateTime,
     ),
-    r'entryType': PropertySchema(
-      id: 2,
-      name: r'entryType',
-      type: IsarType.object,
-      target: r'BudgetEntryType',
-    ),
     r'price': PropertySchema(
-      id: 3,
+      id: 2,
       name: r'price',
       type: IsarType.object,
       target: r'LocalizedPrice',
@@ -767,6 +761,12 @@ const BudgetEntrySchema = CollectionSchema(
   idName: r'id',
   indexes: {},
   links: {
+    r'typeLink': LinkSchema(
+      id: -6630608623710939659,
+      name: r'typeLink',
+      target: r'BudgetEntryType',
+      single: true,
+    ),
     r'thread': LinkSchema(
       id: -6475078827683196957,
       name: r'thread',
@@ -774,10 +774,7 @@ const BudgetEntrySchema = CollectionSchema(
       single: true,
     )
   },
-  embeddedSchemas: {
-    r'LocalizedPrice': LocalizedPriceSchema,
-    r'BudgetEntryType': BudgetEntryTypeSchema
-  },
+  embeddedSchemas: {r'LocalizedPrice': LocalizedPriceSchema},
   getId: _budgetEntryGetId,
   getLinks: _budgetEntryGetLinks,
   attach: _budgetEntryAttach,
@@ -792,9 +789,6 @@ int _budgetEntryEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.entryName.length * 3;
   bytesCount += 3 +
-      BudgetEntryTypeSchema.estimateSize(
-          object.entryType, allOffsets[BudgetEntryType]!, allOffsets);
-  bytesCount += 3 +
       LocalizedPriceSchema.estimateSize(
           object.price, allOffsets[LocalizedPrice]!, allOffsets);
   return bytesCount;
@@ -808,14 +802,8 @@ void _budgetEntrySerialize(
 ) {
   writer.writeString(offsets[0], object.entryName);
   writer.writeDateTime(offsets[1], object.entryTime);
-  writer.writeObject<BudgetEntryType>(
-    offsets[2],
-    allOffsets,
-    BudgetEntryTypeSchema.serialize,
-    object.entryType,
-  );
   writer.writeObject<LocalizedPrice>(
-    offsets[3],
+    offsets[2],
     allOffsets,
     LocalizedPriceSchema.serialize,
     object.price,
@@ -831,19 +819,13 @@ BudgetEntry _budgetEntryDeserialize(
   final object = BudgetEntry(
     entryName: reader.readString(offsets[0]),
     price: reader.readObjectOrNull<LocalizedPrice>(
-          offsets[3],
+          offsets[2],
           LocalizedPriceSchema.deserialize,
           allOffsets,
         ) ??
         LocalizedPrice(),
   );
   object.entryTime = reader.readDateTime(offsets[1]);
-  object.entryType = reader.readObjectOrNull<BudgetEntryType>(
-        offsets[2],
-        BudgetEntryTypeSchema.deserialize,
-        allOffsets,
-      ) ??
-      BudgetEntryType();
   object.id = id;
   return object;
 }
@@ -860,13 +842,6 @@ P _budgetEntryDeserializeProp<P>(
     case 1:
       return (reader.readDateTime(offset)) as P;
     case 2:
-      return (reader.readObjectOrNull<BudgetEntryType>(
-            offset,
-            BudgetEntryTypeSchema.deserialize,
-            allOffsets,
-          ) ??
-          BudgetEntryType()) as P;
-    case 3:
       return (reader.readObjectOrNull<LocalizedPrice>(
             offset,
             LocalizedPriceSchema.deserialize,
@@ -883,12 +858,14 @@ Id _budgetEntryGetId(BudgetEntry object) {
 }
 
 List<IsarLinkBase<dynamic>> _budgetEntryGetLinks(BudgetEntry object) {
-  return [object.thread];
+  return [object.typeLink, object.thread];
 }
 
 void _budgetEntryAttach(
     IsarCollection<dynamic> col, Id id, BudgetEntry object) {
   object.id = id;
+  object.typeLink
+      .attach(col, col.isar.collection<BudgetEntryType>(), r'typeLink', id);
   object.thread.attach(col, col.isar.collection<BudgetThread>(), r'thread', id);
 }
 
@@ -1220,13 +1197,6 @@ extension BudgetEntryQueryFilter
 
 extension BudgetEntryQueryObject
     on QueryBuilder<BudgetEntry, BudgetEntry, QFilterCondition> {
-  QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition> entryType(
-      FilterQuery<BudgetEntryType> q) {
-    return QueryBuilder.apply(this, (query) {
-      return query.object(q, r'entryType');
-    });
-  }
-
   QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition> price(
       FilterQuery<LocalizedPrice> q) {
     return QueryBuilder.apply(this, (query) {
@@ -1237,6 +1207,20 @@ extension BudgetEntryQueryObject
 
 extension BudgetEntryQueryLinks
     on QueryBuilder<BudgetEntry, BudgetEntry, QFilterCondition> {
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition> typeLink(
+      FilterQuery<BudgetEntryType> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.link(q, r'typeLink');
+    });
+  }
+
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition>
+      typeLinkIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.linkLength(r'typeLink', 0, true, 0, true);
+    });
+  }
+
   QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition> thread(
       FilterQuery<BudgetThread> q) {
     return QueryBuilder.apply(this, (query) {
@@ -1353,16 +1337,662 @@ extension BudgetEntryQueryProperty
     });
   }
 
-  QueryBuilder<BudgetEntry, BudgetEntryType, QQueryOperations>
-      entryTypeProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'entryType');
-    });
-  }
-
   QueryBuilder<BudgetEntry, LocalizedPrice, QQueryOperations> priceProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'price');
+    });
+  }
+}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetBudgetEntryTypeCollection on Isar {
+  IsarCollection<BudgetEntryType> get budgetEntryTypes => this.collection();
+}
+
+const BudgetEntryTypeSchema = CollectionSchema(
+  name: r'BudgetEntryType',
+  id: 8341813099737392729,
+  properties: {
+    r'colorInt': PropertySchema(
+      id: 0,
+      name: r'colorInt',
+      type: IsarType.long,
+    ),
+    r'iconData': PropertySchema(
+      id: 1,
+      name: r'iconData',
+      type: IsarType.long,
+    ),
+    r'typeName': PropertySchema(
+      id: 2,
+      name: r'typeName',
+      type: IsarType.string,
+    )
+  },
+  estimateSize: _budgetEntryTypeEstimateSize,
+  serialize: _budgetEntryTypeSerialize,
+  deserialize: _budgetEntryTypeDeserialize,
+  deserializeProp: _budgetEntryTypeDeserializeProp,
+  idName: r'id',
+  indexes: {},
+  links: {},
+  embeddedSchemas: {},
+  getId: _budgetEntryTypeGetId,
+  getLinks: _budgetEntryTypeGetLinks,
+  attach: _budgetEntryTypeAttach,
+  version: '3.1.0+1',
+);
+
+int _budgetEntryTypeEstimateSize(
+  BudgetEntryType object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.typeName.length * 3;
+  return bytesCount;
+}
+
+void _budgetEntryTypeSerialize(
+  BudgetEntryType object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeLong(offsets[0], object.colorInt);
+  writer.writeLong(offsets[1], object.iconData);
+  writer.writeString(offsets[2], object.typeName);
+}
+
+BudgetEntryType _budgetEntryTypeDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = BudgetEntryType();
+  object.colorInt = reader.readLong(offsets[0]);
+  object.iconData = reader.readLong(offsets[1]);
+  object.id = id;
+  object.typeName = reader.readString(offsets[2]);
+  return object;
+}
+
+P _budgetEntryTypeDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readLong(offset)) as P;
+    case 1:
+      return (reader.readLong(offset)) as P;
+    case 2:
+      return (reader.readString(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _budgetEntryTypeGetId(BudgetEntryType object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _budgetEntryTypeGetLinks(BudgetEntryType object) {
+  return [];
+}
+
+void _budgetEntryTypeAttach(
+    IsarCollection<dynamic> col, Id id, BudgetEntryType object) {
+  object.id = id;
+}
+
+extension BudgetEntryTypeQueryWhereSort
+    on QueryBuilder<BudgetEntryType, BudgetEntryType, QWhere> {
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+}
+
+extension BudgetEntryTypeQueryWhere
+    on QueryBuilder<BudgetEntryType, BudgetEntryType, QWhereClause> {
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterWhereClause> idEqualTo(
+      Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterWhereClause>
+      idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterWhereClause>
+      idGreaterThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterWhereClause> idLessThan(
+      Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension BudgetEntryTypeQueryFilter
+    on QueryBuilder<BudgetEntryType, BudgetEntryType, QFilterCondition> {
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      colorIntEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'colorInt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      colorIntGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'colorInt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      colorIntLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'colorInt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      colorIntBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'colorInt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      iconDataEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'iconData',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      iconDataGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'iconData',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      iconDataLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'iconData',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      iconDataBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'iconData',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      typeNameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'typeName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      typeNameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'typeName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      typeNameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'typeName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      typeNameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'typeName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      typeNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'typeName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      typeNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'typeName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      typeNameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'typeName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      typeNameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'typeName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      typeNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'typeName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
+      typeNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'typeName',
+        value: '',
+      ));
+    });
+  }
+}
+
+extension BudgetEntryTypeQueryObject
+    on QueryBuilder<BudgetEntryType, BudgetEntryType, QFilterCondition> {}
+
+extension BudgetEntryTypeQueryLinks
+    on QueryBuilder<BudgetEntryType, BudgetEntryType, QFilterCondition> {}
+
+extension BudgetEntryTypeQuerySortBy
+    on QueryBuilder<BudgetEntryType, BudgetEntryType, QSortBy> {
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterSortBy>
+      sortByColorInt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'colorInt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterSortBy>
+      sortByColorIntDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'colorInt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterSortBy>
+      sortByIconData() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'iconData', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterSortBy>
+      sortByIconDataDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'iconData', Sort.desc);
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterSortBy>
+      sortByTypeName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'typeName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterSortBy>
+      sortByTypeNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'typeName', Sort.desc);
+    });
+  }
+}
+
+extension BudgetEntryTypeQuerySortThenBy
+    on QueryBuilder<BudgetEntryType, BudgetEntryType, QSortThenBy> {
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterSortBy>
+      thenByColorInt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'colorInt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterSortBy>
+      thenByColorIntDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'colorInt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterSortBy>
+      thenByIconData() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'iconData', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterSortBy>
+      thenByIconDataDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'iconData', Sort.desc);
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterSortBy>
+      thenByTypeName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'typeName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterSortBy>
+      thenByTypeNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'typeName', Sort.desc);
+    });
+  }
+}
+
+extension BudgetEntryTypeQueryWhereDistinct
+    on QueryBuilder<BudgetEntryType, BudgetEntryType, QDistinct> {
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QDistinct>
+      distinctByColorInt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'colorInt');
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QDistinct>
+      distinctByIconData() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'iconData');
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, BudgetEntryType, QDistinct> distinctByTypeName(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'typeName', caseSensitive: caseSensitive);
+    });
+  }
+}
+
+extension BudgetEntryTypeQueryProperty
+    on QueryBuilder<BudgetEntryType, BudgetEntryType, QQueryProperty> {
+  QueryBuilder<BudgetEntryType, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, int, QQueryOperations> colorIntProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'colorInt');
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, int, QQueryOperations> iconDataProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'iconData');
+    });
+  }
+
+  QueryBuilder<BudgetEntryType, String, QQueryOperations> typeNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'typeName');
     });
   }
 }
@@ -1674,338 +2304,3 @@ extension LocalizedPriceQueryFilter
 
 extension LocalizedPriceQueryObject
     on QueryBuilder<LocalizedPrice, LocalizedPrice, QFilterCondition> {}
-
-// coverage:ignore-file
-// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
-
-const BudgetEntryTypeSchema = Schema(
-  name: r'BudgetEntryType',
-  id: 8341813099737392729,
-  properties: {
-    r'colorInt': PropertySchema(
-      id: 0,
-      name: r'colorInt',
-      type: IsarType.long,
-    ),
-    r'iconData': PropertySchema(
-      id: 1,
-      name: r'iconData',
-      type: IsarType.long,
-    ),
-    r'typeName': PropertySchema(
-      id: 2,
-      name: r'typeName',
-      type: IsarType.string,
-    )
-  },
-  estimateSize: _budgetEntryTypeEstimateSize,
-  serialize: _budgetEntryTypeSerialize,
-  deserialize: _budgetEntryTypeDeserialize,
-  deserializeProp: _budgetEntryTypeDeserializeProp,
-);
-
-int _budgetEntryTypeEstimateSize(
-  BudgetEntryType object,
-  List<int> offsets,
-  Map<Type, List<int>> allOffsets,
-) {
-  var bytesCount = offsets.last;
-  bytesCount += 3 + object.typeName.length * 3;
-  return bytesCount;
-}
-
-void _budgetEntryTypeSerialize(
-  BudgetEntryType object,
-  IsarWriter writer,
-  List<int> offsets,
-  Map<Type, List<int>> allOffsets,
-) {
-  writer.writeLong(offsets[0], object.colorInt);
-  writer.writeLong(offsets[1], object.iconData);
-  writer.writeString(offsets[2], object.typeName);
-}
-
-BudgetEntryType _budgetEntryTypeDeserialize(
-  Id id,
-  IsarReader reader,
-  List<int> offsets,
-  Map<Type, List<int>> allOffsets,
-) {
-  final object = BudgetEntryType();
-  object.colorInt = reader.readLong(offsets[0]);
-  object.iconData = reader.readLong(offsets[1]);
-  object.typeName = reader.readString(offsets[2]);
-  return object;
-}
-
-P _budgetEntryTypeDeserializeProp<P>(
-  IsarReader reader,
-  int propertyId,
-  int offset,
-  Map<Type, List<int>> allOffsets,
-) {
-  switch (propertyId) {
-    case 0:
-      return (reader.readLong(offset)) as P;
-    case 1:
-      return (reader.readLong(offset)) as P;
-    case 2:
-      return (reader.readString(offset)) as P;
-    default:
-      throw IsarError('Unknown property with id $propertyId');
-  }
-}
-
-extension BudgetEntryTypeQueryFilter
-    on QueryBuilder<BudgetEntryType, BudgetEntryType, QFilterCondition> {
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      colorIntEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'colorInt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      colorIntGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'colorInt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      colorIntLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'colorInt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      colorIntBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'colorInt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      iconDataEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'iconData',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      iconDataGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'iconData',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      iconDataLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'iconData',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      iconDataBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'iconData',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      typeNameEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'typeName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      typeNameGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'typeName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      typeNameLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'typeName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      typeNameBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'typeName',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      typeNameStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'typeName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      typeNameEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'typeName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      typeNameContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'typeName',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      typeNameMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'typeName',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      typeNameIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'typeName',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<BudgetEntryType, BudgetEntryType, QAfterFilterCondition>
-      typeNameIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'typeName',
-        value: '',
-      ));
-    });
-  }
-}
-
-extension BudgetEntryTypeQueryObject
-    on QueryBuilder<BudgetEntryType, BudgetEntryType, QFilterCondition> {}
