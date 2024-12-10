@@ -163,21 +163,22 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
     // Create and submit entry
     final entry =  BudgetEntry(
       entryName: _nameController.text,
-      price: LocalizedPrice(valueParam: double.parse(_priceController.text)),
+      price: LocalizedPrice(valueParam: double.parse(_priceController.text), currencyParam: _selectedCurrency),
       type: _entryTypes![_selectedType].id,
       time: _createTime,
       threadParam: widget.thread,
     );
+
     onLoading(context);
     if (widget.thread != null) {
-      final _ = await ref.read(budgetThreadEntryProviderProvider(widget.thread!.id).notifier).addNewEntry(entry);
+      final _ = await ref.read(budgetThreadEntryProviderProvider(widget.thread!.id).notifier)
+        .addNewEntry(entry);
     } else {
-      final _ = await ref.read(budgetEntriesProviderProvider.notifier).addEntries(entry);
+      final _ = await ref.read(budgetEntriesProviderProvider.notifier)
+        .addEntries(entry);
     }
     // TODO: handle succes
-    if (mounted) {
-      finishLoading(context);
-    }
+    if (mounted) finishLoading(context);
 
     _resetForm();
     if (widget.dismiss != null && mounted) widget.dismiss!();
