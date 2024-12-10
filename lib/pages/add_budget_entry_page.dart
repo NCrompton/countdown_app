@@ -1,11 +1,9 @@
 import 'package:calendar/components/input_value_row.dart';
-import 'package:calendar/dummy/dummy_data.dart';
 import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/providers/budget_entry_provider.dart';
 import 'package:calendar/utils/date_util.dart';
 import 'package:calendar/utils/view_helper.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AddBudgetEntryPage extends ConsumerStatefulWidget {
@@ -31,7 +29,7 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
   int _selectedType = 0;
 
   final List<Currency> _currencies = Currency.values;
-  final List<BudgetEntryType> _entryTypes = entryTypes;
+  List<BudgetEntryType>? _entryTypes;
 
   void _showAddTypeDialog() {
     showCupertinoDialog(
@@ -60,8 +58,8 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
             onPressed: () {
               if (_newTypeController.text.isNotEmpty) {
                 setState(() {
-                  _entryTypes.add(BudgetEntryType(name: _newTypeController.text));
-                  _selectedType = _entryTypes.indexWhere((e) => e.typeName == _newTypeController.text);
+                  _entryTypes!.add(BudgetEntryType(name: _newTypeController.text));
+                  _selectedType = _entryTypes!.indexWhere((e) => e.typeName == _newTypeController.text);
                 });
                 _newTypeController.clear();
               }
@@ -102,7 +100,7 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
                     _selectedType = selectedItem;
                   });
                 },
-                children: _entryTypes.map((type) => Center(
+                children: _entryTypes!.map((type) => Center(
                   child: Text(type.typeName),
                 )).toList(),
               ),
@@ -166,7 +164,7 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
     final entry =  BudgetEntry(
       entryName: _nameController.text,
       price: LocalizedPrice(valueParam: double.parse(_priceController.text)),
-      type: _entryTypes[_selectedType],
+      type: _entryTypes![_selectedType].id,
       time: _createTime,
       threadParam: widget.thread,
     );
@@ -221,6 +219,7 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
 
   @override
   Widget build(BuildContext context) {
+    _entryTypes = ref.watch(budgetEntryTypeProviderProvider).value;
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Column(
@@ -250,9 +249,9 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
       
                   // Entry Type Selection
                   _buildPicker(
-                    text: _entryTypes[_selectedType].typeName, 
+                    text: _entryTypes![_selectedType].typeName, 
                     onPressed: _showTypeSelector, 
-                    icon: _entryTypes[_selectedType].icon,
+                    icon: _entryTypes![_selectedType].icon,
                   ),
                   const SizedBox(height: 16,),
 

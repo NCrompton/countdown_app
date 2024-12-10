@@ -747,8 +747,13 @@ const BudgetEntrySchema = CollectionSchema(
       name: r'entryTime',
       type: IsarType.dateTime,
     ),
-    r'price': PropertySchema(
+    r'entryType': PropertySchema(
       id: 2,
+      name: r'entryType',
+      type: IsarType.long,
+    ),
+    r'price': PropertySchema(
+      id: 3,
       name: r'price',
       type: IsarType.object,
       target: r'LocalizedPrice',
@@ -761,12 +766,6 @@ const BudgetEntrySchema = CollectionSchema(
   idName: r'id',
   indexes: {},
   links: {
-    r'typeLink': LinkSchema(
-      id: -6630608623710939659,
-      name: r'typeLink',
-      target: r'BudgetEntryType',
-      single: true,
-    ),
     r'thread': LinkSchema(
       id: -6475078827683196957,
       name: r'thread',
@@ -802,8 +801,9 @@ void _budgetEntrySerialize(
 ) {
   writer.writeString(offsets[0], object.entryName);
   writer.writeDateTime(offsets[1], object.entryTime);
+  writer.writeLong(offsets[2], object.entryType);
   writer.writeObject<LocalizedPrice>(
-    offsets[2],
+    offsets[3],
     allOffsets,
     LocalizedPriceSchema.serialize,
     object.price,
@@ -819,13 +819,14 @@ BudgetEntry _budgetEntryDeserialize(
   final object = BudgetEntry(
     entryName: reader.readString(offsets[0]),
     price: reader.readObjectOrNull<LocalizedPrice>(
-          offsets[2],
+          offsets[3],
           LocalizedPriceSchema.deserialize,
           allOffsets,
         ) ??
         LocalizedPrice(),
   );
   object.entryTime = reader.readDateTime(offsets[1]);
+  object.entryType = reader.readLong(offsets[2]);
   object.id = id;
   return object;
 }
@@ -842,6 +843,8 @@ P _budgetEntryDeserializeProp<P>(
     case 1:
       return (reader.readDateTime(offset)) as P;
     case 2:
+      return (reader.readLong(offset)) as P;
+    case 3:
       return (reader.readObjectOrNull<LocalizedPrice>(
             offset,
             LocalizedPriceSchema.deserialize,
@@ -858,14 +861,12 @@ Id _budgetEntryGetId(BudgetEntry object) {
 }
 
 List<IsarLinkBase<dynamic>> _budgetEntryGetLinks(BudgetEntry object) {
-  return [object.typeLink, object.thread];
+  return [object.thread];
 }
 
 void _budgetEntryAttach(
     IsarCollection<dynamic> col, Id id, BudgetEntry object) {
   object.id = id;
-  object.typeLink
-      .attach(col, col.isar.collection<BudgetEntryType>(), r'typeLink', id);
   object.thread.attach(col, col.isar.collection<BudgetThread>(), r'thread', id);
 }
 
@@ -1141,6 +1142,62 @@ extension BudgetEntryQueryFilter
     });
   }
 
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition>
+      entryTypeEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'entryType',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition>
+      entryTypeGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'entryType',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition>
+      entryTypeLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'entryType',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition>
+      entryTypeBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'entryType',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition> idEqualTo(
       Id value) {
     return QueryBuilder.apply(this, (query) {
@@ -1207,20 +1264,6 @@ extension BudgetEntryQueryObject
 
 extension BudgetEntryQueryLinks
     on QueryBuilder<BudgetEntry, BudgetEntry, QFilterCondition> {
-  QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition> typeLink(
-      FilterQuery<BudgetEntryType> q) {
-    return QueryBuilder.apply(this, (query) {
-      return query.link(q, r'typeLink');
-    });
-  }
-
-  QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition>
-      typeLinkIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.linkLength(r'typeLink', 0, true, 0, true);
-    });
-  }
-
   QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition> thread(
       FilterQuery<BudgetThread> q) {
     return QueryBuilder.apply(this, (query) {
@@ -1260,6 +1303,18 @@ extension BudgetEntryQuerySortBy
       return query.addSortBy(r'entryTime', Sort.desc);
     });
   }
+
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterSortBy> sortByEntryType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'entryType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterSortBy> sortByEntryTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'entryType', Sort.desc);
+    });
+  }
 }
 
 extension BudgetEntryQuerySortThenBy
@@ -1285,6 +1340,18 @@ extension BudgetEntryQuerySortThenBy
   QueryBuilder<BudgetEntry, BudgetEntry, QAfterSortBy> thenByEntryTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'entryTime', Sort.desc);
+    });
+  }
+
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterSortBy> thenByEntryType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'entryType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterSortBy> thenByEntryTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'entryType', Sort.desc);
     });
   }
 
@@ -1315,6 +1382,12 @@ extension BudgetEntryQueryWhereDistinct
       return query.addDistinctBy(r'entryTime');
     });
   }
+
+  QueryBuilder<BudgetEntry, BudgetEntry, QDistinct> distinctByEntryType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'entryType');
+    });
+  }
 }
 
 extension BudgetEntryQueryProperty
@@ -1334,6 +1407,12 @@ extension BudgetEntryQueryProperty
   QueryBuilder<BudgetEntry, DateTime, QQueryOperations> entryTimeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'entryTime');
+    });
+  }
+
+  QueryBuilder<BudgetEntry, int, QQueryOperations> entryTypeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'entryType');
     });
   }
 

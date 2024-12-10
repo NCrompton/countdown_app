@@ -1,7 +1,6 @@
 import 'package:calendar/components/editable_info_row.dart';
 import 'package:calendar/components/picker_wrapper.dart';
 import 'package:calendar/controllers/input_controller.dart';
-import 'package:calendar/dummy/dummy_data.dart';
 import 'package:calendar/layout/floating_bottom_drawer.dart';
 import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/providers/budget_entry_provider.dart';
@@ -10,7 +9,6 @@ import 'package:calendar/utils/date_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 
 class BudgetEntryPage extends ConsumerStatefulWidget {
   final BudgetEntry entry;
@@ -30,6 +28,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
   InputController<Currency> _currencyController = InputController(Currency.hkd);
   InputController<DateTime> _createDateController = InputController(DateTime.now());
   InputController<BudgetEntryType> _typeController = InputController(BudgetEntryType.defaultType());
+  List<BudgetEntryType>? typeList;
 
   @override
   void initState() {
@@ -37,7 +36,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
     _nameController = InputController(widget.entry.entryName);    
     _priceController = InputController(widget.entry.price.value);    
     _currencyController = InputController(widget.entry.price.currency);    
-    _typeController = InputController(widget.entry.entryType);
+    _typeController = InputController(typeList?[widget.entry.entryType] ?? BudgetEntryType.defaultType());
     _createDateController = InputController(widget.entry.entryTime);
   }
 
@@ -50,9 +49,9 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
         useMagnifier: true,
         itemExtent: 32.0,
         onSelectedItemChanged: (int selectedItem) {
-          _typeController.set(entryTypes[selectedItem]);
+          _typeController.set(typeList![selectedItem]);
         },
-        children: entryTypes.map((type) => Center(
+        children: typeList!.map((type) => Center(
           child: Text(type.typeName),
         )).toList(),
       ),
@@ -88,7 +87,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
      newEntry = newEntry
       ..entryName = _nameController.value
       ..entryTime = _createDateController.value
-      ..typeLink = (IsarLink<BudgetEntryType>()..value=_typeController.value)
+      ..entryType = _typeController.value.id
       ..price.value = _priceController.value
       ..price.currency = _currencyController.value;
 
@@ -99,7 +98,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
         ChangedValue(name: "Price", oldValue: widget.entry.price.value.toString(), newValue: newEntry.price.value.toString()),
         ChangedValue(name: "Currency", oldValue: widget.entry.price.currency.displayName, newValue: newEntry.price.currency.displayName),
         ChangedValue(name: "Create Time", oldValue: widget.entry.entryTime.formatToDisplay(), newValue: newEntry.entryTime.formatToDisplay()),
-        ChangedValue(name: "Type", oldValue: widget.entry.entryType.typeName, newValue: newEntry.entryType.typeName),
+        ChangedValue(name: "Type", oldValue: typeList![widget.entry.entryType].typeName, newValue: typeList![newEntry.entryType].typeName),
       ],
       onConfirm:() async {
         await _updateEntry(newEntry);
@@ -118,6 +117,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
 
   @override
   Widget build(BuildContext context) {
+    typeList = ref.watch(budgetEntryTypeProviderProvider).value;
     return CupertinoPageScaffold(
         resizeToAvoidBottomInset: false,
         navigationBar: CupertinoNavigationBar(

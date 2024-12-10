@@ -46,7 +46,7 @@ class BudgetThreadList extends ConsumerWidget {
                   SliverToBoxAdapter(
                     child: switch(threadsProvider) {
                       AsyncData(:final value) => value.isEmpty? 
-                        const SizedBox(child: Text("nothing")) : 
+                        const SizedBox(child: Center(child: Text("Add a thread on top right"))) : 
                         CupertinoListSection(
                           children: value.mapIndexed((thread, i) {
                             return Builder(

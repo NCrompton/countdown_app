@@ -28,21 +28,21 @@ class BudgetEntry {
   String entryName;
   LocalizedPrice price;
   DateTime entryTime;
-  IsarLink<BudgetEntryType> typeLink = IsarLink<BudgetEntryType>();
+  int entryType;
   IsarLink<BudgetThread> thread = IsarLink<BudgetThread>();
 
-  @ignore
-  BudgetEntryType get entryType => typeLink.value ?? BudgetEntryType.defaultType();
+  // @ignore
+  // BudgetEntryType get entryType => typeLink ?? BudgetEntryType.defaultType();
 
   BudgetEntry({
     required this.entryName,
     required this.price,
     BudgetThread? threadParam,
-    BudgetEntryType? type,
+    int? type,
     DateTime? time,
   }):
     entryTime = time ?? DateTime.now(), 
-    typeLink = IsarLink<BudgetEntryType>()..value = type ?? BudgetEntryType._defaultType,
+    entryType = type ?? BudgetEntryType._defaultType.id,
     thread = IsarLink<BudgetThread>()..value = threadParam;
     
   BudgetEntry.copy(BudgetEntry entry):
@@ -50,7 +50,7 @@ class BudgetEntry {
     entryName = entry.entryName,
     price = LocalizedPrice.copy(entry.price),
     thread = entry.thread,
-    typeLink = entry.typeLink,
+    entryType = entry.entryType,
     entryTime = entry.entryTime;
 }
 
@@ -86,15 +86,15 @@ class BudgetEntryType {
     colorInt = colorParam ?? (Random().nextDouble() * 0xFFFFFF).toInt();
 
   static final BudgetEntryType _defaultType = BudgetEntryType(name: "Generic", colorParam: Colors.grey.value)
-    ..id=1;
+    ..id=0;
   static final BudgetEntryType _foodType = BudgetEntryType(name: 'Food', iconDataParam: Icons.fastfood.codePoint, colorParam: Colors.orange.value)
-    ..id=2; 
+    ..id=1; 
   static final BudgetEntryType _transportType = BudgetEntryType(name: 'Transport', iconDataParam: Icons.train.codePoint, colorParam: Colors.green.value)
-    ..id=3;
+    ..id=2;
   static final BudgetEntryType _entertainmentType = BudgetEntryType(name: 'Entertainment', iconDataParam: Icons.tv.codePoint, colorParam: Colors.amber.value)
-    ..id=4; 
+    ..id=3; 
   static final BudgetEntryType _shoppingType = BudgetEntryType(name: 'Shopping', iconDataParam: Icons.shopping_bag.codePoint, colorParam: Colors.red.value)
-    ..id=5;
+    ..id=4;
   factory BudgetEntryType.defaultType() => _defaultType;
   factory BudgetEntryType.foodType() => _foodType;
   factory BudgetEntryType.transportType() => _transportType;

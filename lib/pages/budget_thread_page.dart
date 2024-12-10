@@ -23,7 +23,6 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
 
   @override
   Widget build(BuildContext context) {
-    // final budgets = widget.thread.budgets;
     final budgets = (widget.thread != null)
       ? ref.watch(budgetThreadEntryProviderProvider(widget.thread!.id)).value
       : ref.watch(budgetEntriesProviderProvider).value;
@@ -67,14 +66,15 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
   }
 }
 
-class BudgetEntryCell extends StatelessWidget {
+class BudgetEntryCell extends ConsumerWidget {
   const BudgetEntryCell({super.key, required this.entry, this.onTap});
 
   final BudgetEntry entry;
   final GestureTapCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final type = ref.watch(budgetEntryTypeProviderProvider).value![entry.entryType];
     return ListCell(
       onTap: onTap,
       leftWidget: Text(entry.entryName),
@@ -83,9 +83,9 @@ class BudgetEntryCell extends StatelessWidget {
         style: TextStyle(color: entry.price.value < 0 ? const Color(negativeColor) : const Color(positiveColor))
       ),
       leading: CircleAvatar(
-        backgroundColor: entry.entryType.color,
-        foregroundColor: entry.entryType.color.computeLuminance() > 0.5 ? Colors.black : Colors.white,
-        child: Icon(entry.entryType.icon),
+        backgroundColor: type.color,
+        foregroundColor: type.color.computeLuminance() > 0.5 ? Colors.black : Colors.white,
+        child: Icon(type.icon),
       ),
     );
   }

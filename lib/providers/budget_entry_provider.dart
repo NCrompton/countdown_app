@@ -141,7 +141,15 @@ class BudgetEntryTypeProvider extends _$BudgetEntryTypeProvider {
 
   Future<List<BudgetEntryType>> _fetchAllTypes() async {
     final db = await BudgetDatabase.getInstance();
-    return db.getAllEntryTypes();
+    final userTypes = await db.getAllEntryTypes();
+    final List<BudgetEntryType> defaultTypes = [
+      BudgetEntryType.defaultType(), 
+      BudgetEntryType.foodType(), 
+      BudgetEntryType.transportType(), 
+      BudgetEntryType.entertainmentType(), 
+      BudgetEntryType.shoppingType(), 
+    ];
+    return [...defaultTypes, ...userTypes];
   }
 
   @override
