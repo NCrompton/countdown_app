@@ -120,7 +120,7 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
           children: List<Widget>.generate(_currencies.length,
               (int index) {
             return Center(
-              child: Text(_currencies[index].name),
+              child: Text(_currencies[index].displayName),
             );
           })
         ),
@@ -215,6 +215,14 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
             ],
           ),
         );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.thread != null) {
+      _selectedCurrency = widget.thread!.preferredCurrency;
+    }
   }
 
   @override

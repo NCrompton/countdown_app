@@ -138,7 +138,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
                       children: [
                         EntryAttributeRow<String>(attributeName: "Name", inputController: _nameController,),
                         EntryAttributeRow<double>(attributeName: "Price", inputController: _priceController,),
-                        EntryAttributeRow<Currency>(attributeName: "Currency", attributeValueString: _currencyController.value.name.toUpperCase(), inputController: _currencyController, enumList:Currency.values),
+                        EntryAttributeRow<Currency>(attributeName: "Currency", attributeValueString: _currencyController.value.displayName.toUpperCase(), inputController: _currencyController, enumList:Currency.values),
                         EntryAttributeRow<DateTime>(attributeName: "Create Time", attributeValueString: _createDateController.value.formatToDisplay(), inputController: _createDateController),
                         EntryAttributeRow<BudgetEntryType>(attributeName: "Type", attributeValueString: _typeController.value.typeName, inputController: _typeController, customInput: _buildTypeInputWidget(context)),
                       ],

@@ -22,7 +22,7 @@ class BudgetThreadList extends ConsumerWidget {
 
     return FloatingBottomDrawerScaffold(
       title: "Budget Threads",
-      heightPortion: 0.5,
+      heightPortion: 0.7,
       drawerChild: (dismiss) => AddBudgetThreadPage(dismiss: dismiss),
       builder: (context, visibilityController) {
         return CustomScrollView(
