@@ -159,7 +159,7 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
     });
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_nameController.text.isEmpty || _priceController.text.isEmpty) return _showErrorDialog();
 
     // Create and submit entry
@@ -170,16 +170,19 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
       time: _createTime,
       threadParam: widget.thread,
     );
-    // TODO: check success
+    onLoading(context);
     if (widget.thread != null) {
-      ref.read(budgetThreadEntryProviderProvider(widget.thread!.id).notifier).addNewEntry(entry);
+      final _ = await ref.read(budgetThreadEntryProviderProvider(widget.thread!.id).notifier).addNewEntry(entry);
     } else {
-      ref.read(budgetEntriesProviderProvider.notifier).addEntries(entry);
+      final _ = await ref.read(budgetEntriesProviderProvider.notifier).addEntries(entry);
     }
-      
+    // TODO: handle succes
+    if (mounted) {
+      finishLoading(context);
+    }
 
     _resetForm();
-    if (widget.dismiss != null) widget.dismiss!();
+    if (widget.dismiss != null && mounted) widget.dismiss!();
   }
 
   Widget _buildPicker({

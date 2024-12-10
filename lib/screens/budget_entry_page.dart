@@ -101,16 +101,19 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
         ChangedValue(name: "Create Time", oldValue: widget.entry.entryTime.formatToDisplay(), newValue: newEntry.entryTime.formatToDisplay()),
         ChangedValue(name: "Type", oldValue: widget.entry.entryType.typeName, newValue: newEntry.entryType.typeName),
       ],
-      onConfirm:() {
-        _updateEntry(ref, newEntry);
+      onConfirm:() async {
+        await _updateEntry(newEntry);
         dismiss();
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
       },
       onReject: dismiss,
     );
   }
 
-  void _updateEntry(WidgetRef ref, BudgetEntry newEntry) {
-    ref.read(budgetEntriesProviderProvider.notifier).updateEntry(newEntry);
+  Future<bool> _updateEntry(BudgetEntry newEntry) async {
+    return ref.read(budgetEntriesProviderProvider.notifier).updateEntry(newEntry);
   }
 
   @override

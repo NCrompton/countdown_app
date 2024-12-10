@@ -29,12 +29,14 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     state = AsyncData(await _fetchAllEntries());
   }
 
-  void addEntries(BudgetEntry entry) async {
+  Future<bool> addEntries(BudgetEntry entry) async {
+    bool success = true;
     final db = await BudgetDatabase.getInstance();
     await db.createEntry(entry);
-
+    
     state = AsyncValue.data(await _fetchAllEntries());
     await notifyThread();
+    return success;
   }
 
   Future<BudgetEntry?> getEntries(Id id) async {
