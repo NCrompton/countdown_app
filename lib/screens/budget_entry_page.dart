@@ -115,19 +115,26 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
     return ref.read(budgetEntriesProviderProvider.notifier).updateEntry(newEntry);
   }
 
+  /// Only react if provider state changes
+  void initTypeList() async {
+    typeList = await ref.watch(budgetEntryTypeProviderProvider.future);
+    _typeController.set(typeList![widget.entry.entryType]);
+  }
+
   @override
   Widget build(BuildContext context) {
-    typeList = ref.watch(budgetEntryTypeProviderProvider).value;
+    final state = ref.watch(budgetEntriesProviderProvider);
+    initTypeList();
     return CupertinoPageScaffold(
-        resizeToAvoidBottomInset: false,
-        navigationBar: CupertinoNavigationBar(
-          middle: Text(widget.entry.entryName),
-        ),
-        child: _buildListener(
-          builder: (context, child) => FloatingBottomDrawerPage(
-            heightPortion: 0.6,
-            drawerChild: _buildPreview,
-            builder: (context, visibilityController) {
+      resizeToAvoidBottomInset: false,
+      navigationBar: CupertinoNavigationBar(
+        middle: Text(widget.entry.entryName),
+      ),
+      child: _buildListener(
+        builder: (context, child) => FloatingBottomDrawerPage(
+          heightPortion: 0.6,
+          drawerChild: _buildPreview,
+          builder: (context, visibilityController) {
             return  Container(
               color: CupertinoColors.secondarySystemBackground,
               padding: const EdgeInsets.all(12.0),
@@ -144,15 +151,19 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
                       ],
                     ),
                   ),
-                  CupertinoButton.filled(
-                    onPressed: () {
-                      visibilityController.setVisibility(true);
-                    },
-                    child: const Text("Update Budget"), 
-                  )
+                  switch(state) {
+                    AsyncLoading() => const CupertinoButton.filled(
+                      onPressed: null,
+                      child: CircularProgressIndicator(), 
+                    ),
+                    _ => CupertinoButton.filled(
+                      child: const Text("Update Budget"),
+                      onPressed: () => visibilityController.setVisibility(true),
+                    ),
+                  }
                 ],
               ),
-            );
+            ); 
           },
         ),
       ),

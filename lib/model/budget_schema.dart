@@ -20,6 +20,17 @@ class BudgetThread {
     required this.preferredCurrency,
     IsarLinks<BudgetEntry>? budgets
   }): budgets = budgets ?? IsarLinks<BudgetEntry>();
+
+  BudgetThread.fromJson(Map<String, dynamic> json):
+    id = json['id'],
+    threadName = json['name'],
+    preferredCurrency = Currency.fromText(json['preferred_currency'])!;
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': threadName,
+    'preferred_currency': preferredCurrency.name,
+  };
 }
 
 @collection
@@ -52,6 +63,25 @@ class BudgetEntry {
     thread = entry.thread,
     entryType = entry.entryType,
     entryTime = entry.entryTime;
+
+  BudgetEntry.fromJson(Map<String, dynamic> json):
+    id = json['id'],
+    entryName = json['name'],
+    price = LocalizedPrice(
+      valueParam: json['price']['value'], 
+      currencyParam: json['price']['currency']),
+    entryTime = json['time'],
+    entryType = json['type'];
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': entryName,
+    'price': {'value': price.value, 'currency': price.currency.name},
+    'time': entryTime.toIso8601String(),
+    'type': entryType,
+    'thread': thread.value?.id,
+  };
+
 }
 
 @embedded
@@ -106,6 +136,19 @@ class BudgetEntryType {
 
   @ignore
   Color get color => Color(colorInt).withOpacity(1.0);
+
+  BudgetEntryType.fromJson(Map<String, dynamic> json):
+    id = json['id'],
+    typeName = json['type_name'],
+    iconData = json['icon_data'],
+    colorInt = json['color_data'];
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'type_name': typeName,
+    'icon_data': iconData,
+    'color_data': colorInt
+  };
 }
 
 enum Currency with ProjectEnum{

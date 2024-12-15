@@ -1,6 +1,7 @@
 import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/providers/budget_thread_provider.dart';
 import 'package:calendar/services/budget_database.dart';
+import 'package:calendar/services/supabase_service.dart';
 import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'budget_entry_provider.g.dart';
@@ -8,34 +9,39 @@ part 'budget_entry_provider.g.dart';
 @riverpod
 class BudgetEntriesProvider extends _$BudgetEntriesProvider {
 
+  late SupabaseService backup;
+  late BudgetDatabase db;
+
   Future<List<BudgetEntry>> _fetchAllEntries() async {
-    final db = await BudgetDatabase.getInstance();
     return db.getAllEntries();
   }
 
   // TODO: fix
   Future<void> notifyThread() async {
-      await ref.read(budgetThreadProviderProvider.notifier).reload();
+    await ref.read(budgetThreadProviderProvider.notifier).reload();
   }
 
   @override
   Future<List<BudgetEntry>> build() async {
     state = const AsyncLoading();
+
+    db = await BudgetDatabase.getInstance();
+    backup = await ref.watch(supabaseServiceProvider.future);
     return _fetchAllEntries();
   }
 
   Future<void> reload() async {
-    state = const AsyncLoading();
-    state = AsyncData(await _fetchAllEntries());
+    build();
   }
 
   Future<bool> addEntries(BudgetEntry entry) async {
     bool success = true;
-    final db = await BudgetDatabase.getInstance();
     await db.createEntry(entry);
     
     state = AsyncValue.data(await _fetchAllEntries());
+
     await notifyThread();
+    backup.saveEntry(entry);
     return success;
   }
 
@@ -46,20 +52,20 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
 
   Future<bool> updateEntry(BudgetEntry entry) async {
     bool success = true;
-    final db = await BudgetDatabase.getInstance();
     state = await AsyncValue.guard(() async {
       await db.updateEntry(entry);
 
       return _fetchAllEntries();
     }, (_) => success = false);
+
     await notifyThread();
+    backup.updateEntry(entry);
     return success;
   }
 
   Future<bool> deleteEntry(Id id) async {
     bool success = true;
     state = await AsyncValue.guard(() async {
-      final db = await BudgetDatabase.getInstance();
       final entry = await db.getEntry(id);
 
       final thread = entry!.thread.value;
@@ -69,6 +75,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
       return _fetchAllEntries();
     }, (_) => (success = false));
     await notifyThread();
+    ref.read(supabaseServiceProvider.notifier).deleteEntry(id);
     return success;
   }
 }
@@ -76,8 +83,10 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
 @riverpod
 class BudgetThreadEntryProvider extends _$BudgetThreadEntryProvider {
 
+  late BudgetDatabase db;
+  late SupabaseService backup;
+
   Future<List<BudgetEntry>> _fetchAllEntriesOfThread() async {
-    final db = await BudgetDatabase.getInstance();
     return db.getEntriesFromThread(threadId);
   }
 
@@ -88,8 +97,11 @@ class BudgetThreadEntryProvider extends _$BudgetThreadEntryProvider {
   }
 
   @override
-  Future<List<BudgetEntry>> build(Id threadId) {
+  Future<List<BudgetEntry>> build(Id threadId) async {
     state = const AsyncLoading();
+
+    db = await BudgetDatabase.getInstance();
+    backup = await ref.watch(supabaseServiceProvider.future);
     return _fetchAllEntriesOfThread();
   }
   
@@ -102,25 +114,27 @@ class BudgetThreadEntryProvider extends _$BudgetThreadEntryProvider {
 
       return await _fetchAllEntriesOfThread();
     }, (_) => (success = false));
+
+    backup.saveEntry(entry);
     return success;
   }
 
   Future<bool> updateEntryThread(BudgetEntry entry) async {
     bool success = true;
     state = await AsyncValue.guard(() async {
-      (await BudgetDatabase.getInstance()).updateEntrySync(entry);
+      db.updateEntrySync(entry);
       await notifyThread();
 
       return await _fetchAllEntriesOfThread();
     }, (err) => (success = false));
+
+    backup.updateEntry(entry);
     return success;
   }
 
   Future<bool> deleteEntry(Id id) async {
     bool success = true;
     state = await AsyncValue.guard(() async {
-      final db = await BudgetDatabase.getInstance();
-
       final entry = await db.getEntry(id);
       final thread = entry!.thread.value;
 
@@ -132,6 +146,8 @@ class BudgetThreadEntryProvider extends _$BudgetThreadEntryProvider {
 
       return await _fetchAllEntriesOfThread();
     }, (_) => (success = false));
+
+    backup.deleteEntry(id);
     return success;
   }
 }
@@ -139,8 +155,9 @@ class BudgetThreadEntryProvider extends _$BudgetThreadEntryProvider {
 @riverpod
 class BudgetEntryTypeProvider extends _$BudgetEntryTypeProvider {
 
+  late BudgetDatabase db;
+
   Future<List<BudgetEntryType>> _fetchAllTypes() async {
-    final db = await BudgetDatabase.getInstance();
     final userTypes = await db.getAllEntryTypes();
     final List<BudgetEntryType> defaultTypes = [
       BudgetEntryType.defaultType(), 
@@ -155,11 +172,12 @@ class BudgetEntryTypeProvider extends _$BudgetEntryTypeProvider {
   @override
   Future<List<BudgetEntryType>> build() async {
     state = const AsyncLoading();
+
+    db = await BudgetDatabase.getInstance();
     return _fetchAllTypes();
   }
 
   Future<void> createType(BudgetEntryType type) async {
-    final db = await BudgetDatabase.getInstance();
     await db.createEntryType(type);
     state = AsyncValue.data(await _fetchAllTypes());
   }

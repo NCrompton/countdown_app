@@ -23,9 +23,9 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
 
   @override
   Widget build(BuildContext context) {
-    final budgets = (widget.thread != null)
-      ? ref.watch(budgetThreadEntryProviderProvider(widget.thread!.id)).value
-      : ref.watch(budgetEntriesProviderProvider).value;
+    final state = (widget.thread != null)
+      ? ref.watch(budgetThreadEntryProviderProvider(widget.thread!.id))
+      : ref.watch(budgetEntriesProviderProvider);
     return FloatingBottomDrawerPage(
       heightPortion: 0.7,
       drawerChild: (dismiss) => AddBudgetEntryPage(thread: widget.thread, dismiss: dismiss),
@@ -39,25 +39,30 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
                             : ref.refresh(budgetEntriesProviderProvider.future),
                       ),
                       SliverToBoxAdapter(
-                        child: CupertinoListSection(
-                              children: [...budgets?.map((entry) {
-                                  return Builder(
-                                    builder: (context) {
-                                      return BudgetEntryCell(
-                                        onTap: () {
-                                          openPageSide(
-                                            context, 
-                                            BudgetEntryPage(entry: entry),
-                                          );
-                                        },
-                                        entry: entry,
-                                      );
-                                    },
-                                  );
-                                }).toList() ?? [],
-                                BudgetEntryAddCell(onTap: () => visibilityController.setVisibility(true)), 
-                              ]
-                            ),
+                        child: switch(state) {
+                          AsyncData(:final value) => 
+                            CupertinoListSection(
+                              children: [...value.map((entry) {
+                                return Builder(
+                                  builder: (context) {
+                                    return BudgetEntryCell(
+                                      onTap: () {
+                                        openPageSide(
+                                          context, 
+                                          BudgetEntryPage(entry: entry),
+                                        );
+                                      },
+                                      entry: entry,
+                                    );
+                                  },
+                                );
+                              }).toList(),
+                              BudgetEntryAddCell(onTap: () => visibilityController.setVisibility(true)), 
+                            ]
+                          ),
+                          AsyncLoading() => const Center(child: CircularProgressIndicator()),
+                          _ => const SizedBox(),
+                        }
                       ),
                     ],
                   );

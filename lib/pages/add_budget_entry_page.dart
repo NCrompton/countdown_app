@@ -4,6 +4,7 @@ import 'package:calendar/providers/budget_entry_provider.dart';
 import 'package:calendar/utils/date_util.dart';
 import 'package:calendar/utils/view_helper.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AddBudgetEntryPage extends ConsumerStatefulWidget {
@@ -29,47 +30,47 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
   int _selectedType = 0;
 
   final List<Currency> _currencies = Currency.values;
-  List<BudgetEntryType>? _entryTypes;
+  // List<BudgetEntryType>? _entryTypes;
 
-  void _showAddTypeDialog() {
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('Add New Type'),
-        content: Padding(
-          padding: const EdgeInsets.only(top: 16.0),
-          child: CupertinoTextField(
-            controller: _newTypeController,
-            placeholder: 'Type name',
-            autofocus: true,
-          ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            child: const Text('Cancel'),
-            onPressed: () {
-              _newTypeController.clear();
-              Navigator.pop(context);
-            },
-          ),
-          CupertinoDialogAction(
-            child: const Text('Add'),
-            onPressed: () {
-              if (_newTypeController.text.isNotEmpty) {
-                setState(() {
-                  _entryTypes!.add(BudgetEntryType(name: _newTypeController.text));
-                  _selectedType = _entryTypes!.indexWhere((e) => e.typeName == _newTypeController.text);
-                });
-                _newTypeController.clear();
-              }
-              Navigator.pop(context);
-            },
-          ),
-        ],
-      ),
-    );
-  }
+  // void _showAddTypeDialog() {
+  //   showCupertinoDialog(
+  //     context: context,
+  //     builder: (context) => CupertinoAlertDialog(
+  //       title: const Text('Add New Type'),
+  //       content: Padding(
+  //         padding: const EdgeInsets.only(top: 16.0),
+  //         child: CupertinoTextField(
+  //           controller: _newTypeController,
+  //           placeholder: 'Type name',
+  //           autofocus: true,
+  //         ),
+  //       ),
+  //       actions: [
+  //         CupertinoDialogAction(
+  //           isDestructiveAction: true,
+  //           child: const Text('Cancel'),
+  //           onPressed: () {
+  //             _newTypeController.clear();
+  //             Navigator.pop(context);
+  //           },
+  //         ),
+  //         CupertinoDialogAction(
+  //           child: const Text('Add'),
+  //           onPressed: () {
+  //             if (_newTypeController.text.isNotEmpty) {
+  //               setState(() {
+  //                 _entryTypes!.add(BudgetEntryType(name: _newTypeController.text));
+  //                 _selectedType = _entryTypes!.indexWhere((e) => e.typeName == _newTypeController.text);
+  //               });
+  //               _newTypeController.clear();
+  //             }
+  //             Navigator.pop(context);
+  //           },
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   void _showErrorDialog() {
     showCupertinoDialog(
@@ -87,7 +88,7 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
     );
   }
 
-  void _showTypeSelector() {
+  void _showTypeSelector({required List<BudgetEntryType> entryTypes}) {
     showCupertinoPickerPopup(
       context: context, 
       picker: CupertinoPicker(
@@ -100,7 +101,7 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
                     _selectedType = selectedItem;
                   });
                 },
-                children: _entryTypes!.map((type) => Center(
+                children: entryTypes.map((type) => Center(
                   child: Text(type.typeName),
                 )).toList(),
               ),
@@ -157,14 +158,14 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
     });
   }
 
-  void _submitForm() async {
+  void _submitForm({required List<BudgetEntryType> entryTypes}) async {
     if (_nameController.text.isEmpty || _priceController.text.isEmpty) return _showErrorDialog();
 
     // Create and submit entry
     final entry =  BudgetEntry(
       entryName: _nameController.text,
       price: LocalizedPrice(valueParam: double.parse(_priceController.text), currencyParam: _selectedCurrency),
-      type: _entryTypes![_selectedType].id,
+      type: entryTypes[_selectedType].id,
       time: _createTime,
       threadParam: widget.thread,
     );
@@ -228,62 +229,77 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
 
   @override
   Widget build(BuildContext context) {
-    _entryTypes = ref.watch(budgetEntryTypeProviderProvider).value;
+    final typeState = ref.watch(budgetEntryTypeProviderProvider);
+    final state = (widget.thread == null) 
+      ? ref.watch(budgetEntriesProviderProvider)
+      : ref.watch(budgetThreadEntryProviderProvider(widget.thread!.id));
+
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // TODO: thread picker
+      child: switch(typeState) {
+        AsyncData(:final value) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // TODO: thread picker
 
-                  InputValueRow(controller: _nameController, placeholder: "Entry Name"),
-                  const SizedBox(height: 16),
-    
-                  InputValueRow(controller: _priceController, placeholder: "Price", isDouble: true,),
-                  const SizedBox(height: 16),
+                    InputValueRow(controller: _nameController, placeholder: "Entry Name"),
+                    const SizedBox(height: 16),
       
-                  // Currency Dropdown
-                  _buildPicker(
-                    text: _selectedCurrency.name.toUpperCase(), 
-                    onPressed: _showCurrencyPicker, 
-                    icon: CupertinoIcons.money_dollar
-                  ),
-                  const SizedBox(height: 16),
-      
-                  // Entry Type Selection
-                  _buildPicker(
-                    text: _entryTypes![_selectedType].typeName, 
-                    onPressed: _showTypeSelector, 
-                    icon: _entryTypes![_selectedType].icon,
-                  ),
-                  const SizedBox(height: 16,),
+                    InputValueRow(controller: _priceController, placeholder: "Price", isDouble: true,),
+                    const SizedBox(height: 16),
+        
+                    // Currency Dropdown
+                    _buildPicker(
+                      text: _selectedCurrency.name.toUpperCase(), 
+                      onPressed: _showCurrencyPicker, 
+                      icon: CupertinoIcons.money_dollar
+                    ),
+                    const SizedBox(height: 16),
+        
+                    // Entry Type Selection
+                    _buildPicker(
+                      text: value[_selectedType].typeName, 
+                      onPressed: () => _showTypeSelector(entryTypes: value), 
+                      icon: value[_selectedType].icon,
+                    ),
+                    const SizedBox(height: 16,),
 
-                  // Entry Time Selection
-                  _buildPicker(
-                    text: _createTime.formatToStandard(), 
-                    onPressed: _showCreateTimePicker, 
-                    icon: CupertinoIcons.calendar
-                  ),
-                ],
+                    // Entry Time Selection
+                    _buildPicker(
+                      text: _createTime.formatToStandard(), 
+                      onPressed: _showCreateTimePicker, 
+                      icon: CupertinoIcons.calendar
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          // Submit Button
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: CupertinoButton.filled(
-              onPressed: _submitForm,
-              child: const Text('Add Entry'),
+
+              // Submit Button
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: switch(state) {
+                    AsyncLoading() => const CupertinoButton.filled(
+                      onPressed: null,
+                      child: CircularProgressIndicator(), 
+                    ),
+                    _ => CupertinoButton.filled(
+                      onPressed: () => _submitForm(entryTypes: value),
+                      child: const Text('Add Entry'),
+                    ),
+                  }
+                ),
+              ]
             ),
-          ),
-        ],
-      ),
+            AsyncLoading() => const Center(child: CircularProgressIndicator()),
+            _ => const Center(child: Text("Error")),
+          }
     );
   }
 }

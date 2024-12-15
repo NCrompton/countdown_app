@@ -7,7 +7,7 @@ part of 'budget_entry_provider.dart';
 // **************************************************************************
 
 String _$budgetEntriesProviderHash() =>
-    r'1bb694199926331892df3b1069ce0c968d248d37';
+    r'b9163e6499e4972baf5108979310699b71394d49';
 
 /// See also [BudgetEntriesProvider].
 @ProviderFor(BudgetEntriesProvider)
@@ -24,7 +24,7 @@ final budgetEntriesProviderProvider = AutoDisposeAsyncNotifierProvider<
 
 typedef _$BudgetEntriesProvider = AutoDisposeAsyncNotifier<List<BudgetEntry>>;
 String _$budgetThreadEntryProviderHash() =>
-    r'a9c7fa008ab043abf0200b91b42cf85bdd2b6246';
+    r'c953fe2e20586aa9a882de66cd937262d2cc6e1d';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -194,7 +194,7 @@ class _BudgetThreadEntryProviderProviderElement
 }
 
 String _$budgetEntryTypeProviderHash() =>
-    r'5165394d9c9188bc06173220bcbd17024bf9f4d0';
+    r'ebdfee38438857d4b4fc2ce07ee063e7afb673e9';
 
 /// See also [BudgetEntryTypeProvider].
 @ProviderFor(BudgetEntryTypeProvider)

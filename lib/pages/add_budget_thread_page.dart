@@ -29,6 +29,7 @@ class _AddBudgetThreadPageState extends ConsumerState<AddBudgetThreadPage> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = ref.watch(budgetThreadProviderProvider);
     return  Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -66,10 +67,16 @@ class _AddBudgetThreadPageState extends ConsumerState<AddBudgetThreadPage> {
                 ],
               ),
             ),
-            CupertinoButton.filled(
-              child: const Text('Done'),
-              onPressed: () => _submitBudgetThread(_threadNameController.text, _currencyController.text),
-            ),
+            switch(provider) {
+              AsyncLoading() => const CupertinoButton.filled(
+                onPressed: null,
+                child: CircularProgressIndicator(), 
+              ),
+              _ => CupertinoButton.filled(
+                child: const Text('Done'),
+                onPressed: () => _submitBudgetThread(_threadNameController.text, _currencyController.text),
+              ),
+            }
           ],
         ),
       );
