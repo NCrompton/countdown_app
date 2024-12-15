@@ -43,6 +43,7 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
                           AsyncData(:final value) => 
                             CupertinoListSection(
                               children: [...value.map((entry) {
+                                entry.thread.value = widget.thread;
                                 return Builder(
                                   builder: (context) {
                                     return BudgetEntryCell(

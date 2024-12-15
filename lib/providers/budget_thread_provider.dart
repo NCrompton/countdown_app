@@ -26,11 +26,6 @@ class BudgetThreadProvider extends _$BudgetThreadProvider {
       return _fetchThreads();
     } 
 
-    Future<void> reload() async {
-      state = const AsyncLoading();
-      state = AsyncData(await _fetchThreads());
-    }
-
     Future<void> addBudgetThread(BudgetThread thread) async {
       state = const AsyncValue.loading();
 

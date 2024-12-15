@@ -1,5 +1,4 @@
 import 'package:calendar/components/editable_info_row.dart';
-import 'package:calendar/components/picker_wrapper.dart';
 import 'package:calendar/controllers/input_controller.dart';
 import 'package:calendar/layout/floating_bottom_drawer.dart';
 import 'package:calendar/model/budget_schema.dart';
@@ -29,6 +28,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
   InputController<DateTime> _createDateController = InputController(DateTime.now());
   InputController<BudgetEntryType> _typeController = InputController(BudgetEntryType.defaultType());
   List<BudgetEntryType>? typeList;
+  late BudgetEntry newEntry;
 
   @override
   void initState() {
@@ -38,12 +38,15 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
     _currencyController = InputController(widget.entry.price.currency);    
     _typeController = InputController(typeList?[widget.entry.entryType] ?? BudgetEntryType.defaultType());
     _createDateController = InputController(widget.entry.entryTime);
+
+    newEntry = BudgetEntry.copy(widget.entry);
   }
 
   Widget _buildTypeInputWidget(BuildContext context) {
-    return PickerWrapper(
-      text: _typeController.value.typeName, 
-      picker: CupertinoPicker(
+    // return PickerWrapper(
+    //   text: _typeController.value.typeName, 
+    //   picker: 
+      return CupertinoPicker(
         magnification: 1.22,
         squeeze: 1.2,
         useMagnifier: true,
@@ -54,7 +57,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
         children: typeList!.map((type) => Center(
           child: Text(type.typeName),
         )).toList(),
-      ),
+      // ),
     );
   }
 
@@ -83,14 +86,12 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
   }
 
   Widget _buildPreview(void Function() dismiss) {
-     BudgetEntry newEntry = BudgetEntry.copy(widget.entry);
-     newEntry = newEntry
+     newEntry
       ..entryName = _nameController.value
       ..entryTime = _createDateController.value
       ..entryType = _typeController.value.id
       ..price.value = _priceController.value
       ..price.currency = _currencyController.value;
-
 
     return ChangedValuePreview(
       targets: [
@@ -136,7 +137,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
           drawerChild: _buildPreview,
           builder: (context, visibilityController) {
             return  Container(
-              color: CupertinoColors.secondarySystemBackground,
+              color: CupertinoColors.systemBackground,
               padding: const EdgeInsets.all(12.0),
               child: Column(
                 children: [

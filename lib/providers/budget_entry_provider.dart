@@ -17,8 +17,11 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
   }
 
   // TODO: fix
-  Future<void> notifyThread() async {
-    await ref.read(budgetThreadProviderProvider.notifier).reload();
+  Future<void> resetAllBudgets(Id? threadId) async {
+    ref.invalidate(budgetThreadProviderProvider);
+    if (threadId != null) {
+      ref.invalidate(budgetThreadEntryProviderProvider(threadId));
+    }
   }
 
   @override
@@ -30,17 +33,13 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     return _fetchAllEntries();
   }
 
-  Future<void> reload() async {
-    build();
-  }
-
   Future<bool> addEntries(BudgetEntry entry) async {
     bool success = true;
     await db.createEntry(entry);
     
     state = AsyncValue.data(await _fetchAllEntries());
 
-    await notifyThread();
+    await resetAllBudgets(entry.thread.value?.id);
     backup.saveEntry(entry);
     return success;
   }
@@ -55,27 +54,26 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     state = await AsyncValue.guard(() async {
       await db.updateEntry(entry);
 
-      return _fetchAllEntries();
+      return await _fetchAllEntries();
     }, (_) => success = false);
 
-    await notifyThread();
+    await resetAllBudgets(entry.thread.value?.id);
     backup.updateEntry(entry);
     return success;
   }
 
-  Future<bool> deleteEntry(Id id) async {
+  Future<bool> deleteEntry(BudgetEntry entry) async {
     bool success = true;
     state = await AsyncValue.guard(() async {
-      final entry = await db.getEntry(id);
-
-      final thread = entry!.thread.value;
+      final thread = entry.thread.value;
+      // TODO: delete
       if (thread != null) {
         await db.saveEntryToThread(thread);
       }
       return _fetchAllEntries();
     }, (_) => (success = false));
-    await notifyThread();
-    ref.read(supabaseServiceProvider.notifier).deleteEntry(id);
+    await resetAllBudgets(entry.thread.value?.id);
+    backup.deleteEntry(entry.id);
     return success;
   }
 }
@@ -91,9 +89,9 @@ class BudgetThreadEntryProvider extends _$BudgetThreadEntryProvider {
   }
 
   // TODO: fix
-  Future<void> notifyThread() async {
-      await ref.read(budgetEntriesProviderProvider.notifier).reload();
-      await ref.read(budgetThreadProviderProvider.notifier).reload();
+  Future<void> resetAllBudgets() async {
+      ref.invalidate(budgetEntriesProviderProvider);
+      ref.invalidate(budgetThreadProviderProvider);
   }
 
   @override
@@ -102,15 +100,14 @@ class BudgetThreadEntryProvider extends _$BudgetThreadEntryProvider {
 
     db = await BudgetDatabase.getInstance();
     backup = await ref.watch(supabaseServiceProvider.future);
-    return _fetchAllEntriesOfThread();
+    return await _fetchAllEntriesOfThread();
   }
-  
 
   Future<bool> addNewEntry(BudgetEntry entry) async {
     bool success = true;
     state = await AsyncValue.guard(() async {
       (await BudgetDatabase.getInstance()).createEntrySync(entry);
-      await notifyThread();
+      await resetAllBudgets();
 
       return await _fetchAllEntriesOfThread();
     }, (_) => (success = false));
@@ -123,7 +120,7 @@ class BudgetThreadEntryProvider extends _$BudgetThreadEntryProvider {
     bool success = true;
     state = await AsyncValue.guard(() async {
       db.updateEntrySync(entry);
-      await notifyThread();
+      await resetAllBudgets();
 
       return await _fetchAllEntriesOfThread();
     }, (err) => (success = false));
