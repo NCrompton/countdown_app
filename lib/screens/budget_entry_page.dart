@@ -112,8 +112,41 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
     );
   }
 
+  void showDeleteWarning() {
+    showCupertinoDialog(
+      context: context, 
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text("Delete Budget"),
+        content: const Text("Are you sure to delete the budget entry?"),
+        actions: [
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            child: const Text('Delete'),
+            onPressed: () {
+              _deleteEntry();
+              Navigator.pop(context);
+            },
+          ),
+          CupertinoDialogAction(
+            child: const Text('Cancel'),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ) 
+    );
+  }
+
   Future<bool> _updateEntry(BudgetEntry newEntry) async {
     return ref.read(budgetEntriesProviderProvider.notifier).updateEntry(newEntry);
+  }
+  
+  Future<void> _deleteEntry() async {
+    final success = await ref.read(budgetEntriesProviderProvider.notifier).deleteEntry(widget.entry);
+    if (mounted && success) {
+      Navigator.pop(context);
+    }
   }
 
   /// Only react if provider state changes
@@ -153,20 +186,41 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
                     ),
                   ),
                   switch(state) {
-                    AsyncLoading() => const CupertinoButton.filled(
-                      onPressed: null,
-                      child: CircularProgressIndicator(), 
-                    ),
-                    _ => CupertinoButton.filled(
-                      child: const Text("Update Budget"),
-                      onPressed: () => visibilityController.setVisibility(true),
+                    AsyncLoading() => const CircularProgressIndicator(),
+                    _ => Container(
+                      padding: const EdgeInsets.all(8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: CupertinoButton.filled(
+                              padding: const EdgeInsets.all(0),
+                              onPressed: () => visibilityController.setVisibility(true),
+                              child: const Text("Update"),
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+                          
+                          Expanded(
+                            flex: 1,
+                            child: CupertinoButton(
+                              padding: const EdgeInsets.all(0),
+                              color: CupertinoColors.destructiveRed,
+                              onPressed: showDeleteWarning,
+                              child: const Text("Delete"),
+                            ),
+                          ),
+                        ]
+                      ),
                     ),
                   }
-                ],
-              ),
-            ); 
-          },
-        ),
+                ]
+              )
+            );
+          }
+        ), 
       ),
     );
   }

@@ -17,14 +17,19 @@ const BudgetThreadSchema = CollectionSchema(
   name: r'BudgetThread',
   id: 8515677963265199081,
   properties: {
-    r'preferredCurrency': PropertySchema(
+    r'enabled': PropertySchema(
       id: 0,
+      name: r'enabled',
+      type: IsarType.bool,
+    ),
+    r'preferredCurrency': PropertySchema(
+      id: 1,
       name: r'preferredCurrency',
       type: IsarType.string,
       enumMap: _BudgetThreadpreferredCurrencyEnumValueMap,
     ),
     r'threadName': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'threadName',
       type: IsarType.string,
     )
@@ -68,8 +73,9 @@ void _budgetThreadSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.preferredCurrency.name);
-  writer.writeString(offsets[1], object.threadName);
+  writer.writeBool(offsets[0], object.enabled);
+  writer.writeString(offsets[1], object.preferredCurrency.name);
+  writer.writeString(offsets[2], object.threadName);
 }
 
 BudgetThread _budgetThreadDeserialize(
@@ -80,10 +86,11 @@ BudgetThread _budgetThreadDeserialize(
 ) {
   final object = BudgetThread(
     preferredCurrency: _BudgetThreadpreferredCurrencyValueEnumMap[
-            reader.readStringOrNull(offsets[0])] ??
+            reader.readStringOrNull(offsets[1])] ??
         Currency.hkd,
-    threadName: reader.readString(offsets[1]),
+    threadName: reader.readString(offsets[2]),
   );
+  object.enabled = reader.readBool(offsets[0]);
   object.id = id;
   return object;
 }
@@ -96,10 +103,12 @@ P _budgetThreadDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
+      return (reader.readBool(offset)) as P;
+    case 1:
       return (_BudgetThreadpreferredCurrencyValueEnumMap[
               reader.readStringOrNull(offset)] ??
           Currency.hkd) as P;
-    case 1:
+    case 2:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -221,6 +230,16 @@ extension BudgetThreadQueryWhere
 
 extension BudgetThreadQueryFilter
     on QueryBuilder<BudgetThread, BudgetThread, QFilterCondition> {
+  QueryBuilder<BudgetThread, BudgetThread, QAfterFilterCondition>
+      enabledEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'enabled',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<BudgetThread, BudgetThread, QAfterFilterCondition> idEqualTo(
       Id value) {
     return QueryBuilder.apply(this, (query) {
@@ -616,6 +635,18 @@ extension BudgetThreadQueryLinks
 
 extension BudgetThreadQuerySortBy
     on QueryBuilder<BudgetThread, BudgetThread, QSortBy> {
+  QueryBuilder<BudgetThread, BudgetThread, QAfterSortBy> sortByEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'enabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BudgetThread, BudgetThread, QAfterSortBy> sortByEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'enabled', Sort.desc);
+    });
+  }
+
   QueryBuilder<BudgetThread, BudgetThread, QAfterSortBy>
       sortByPreferredCurrency() {
     return QueryBuilder.apply(this, (query) {
@@ -646,6 +677,18 @@ extension BudgetThreadQuerySortBy
 
 extension BudgetThreadQuerySortThenBy
     on QueryBuilder<BudgetThread, BudgetThread, QSortThenBy> {
+  QueryBuilder<BudgetThread, BudgetThread, QAfterSortBy> thenByEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'enabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BudgetThread, BudgetThread, QAfterSortBy> thenByEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'enabled', Sort.desc);
+    });
+  }
+
   QueryBuilder<BudgetThread, BudgetThread, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -688,6 +731,12 @@ extension BudgetThreadQuerySortThenBy
 
 extension BudgetThreadQueryWhereDistinct
     on QueryBuilder<BudgetThread, BudgetThread, QDistinct> {
+  QueryBuilder<BudgetThread, BudgetThread, QDistinct> distinctByEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'enabled');
+    });
+  }
+
   QueryBuilder<BudgetThread, BudgetThread, QDistinct>
       distinctByPreferredCurrency({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -709,6 +758,12 @@ extension BudgetThreadQueryProperty
   QueryBuilder<BudgetThread, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<BudgetThread, bool, QQueryOperations> enabledProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'enabled');
     });
   }
 
@@ -737,23 +792,28 @@ const BudgetEntrySchema = CollectionSchema(
   name: r'BudgetEntry',
   id: 4168342879795991231,
   properties: {
-    r'entryName': PropertySchema(
+    r'enabled': PropertySchema(
       id: 0,
+      name: r'enabled',
+      type: IsarType.bool,
+    ),
+    r'entryName': PropertySchema(
+      id: 1,
       name: r'entryName',
       type: IsarType.string,
     ),
     r'entryTime': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'entryTime',
       type: IsarType.dateTime,
     ),
     r'entryType': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'entryType',
       type: IsarType.long,
     ),
     r'price': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'price',
       type: IsarType.object,
       target: r'LocalizedPrice',
@@ -799,11 +859,12 @@ void _budgetEntrySerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.entryName);
-  writer.writeDateTime(offsets[1], object.entryTime);
-  writer.writeLong(offsets[2], object.entryType);
+  writer.writeBool(offsets[0], object.enabled);
+  writer.writeString(offsets[1], object.entryName);
+  writer.writeDateTime(offsets[2], object.entryTime);
+  writer.writeLong(offsets[3], object.entryType);
   writer.writeObject<LocalizedPrice>(
-    offsets[3],
+    offsets[4],
     allOffsets,
     LocalizedPriceSchema.serialize,
     object.price,
@@ -817,16 +878,17 @@ BudgetEntry _budgetEntryDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = BudgetEntry(
-    entryName: reader.readString(offsets[0]),
+    entryName: reader.readString(offsets[1]),
     price: reader.readObjectOrNull<LocalizedPrice>(
-          offsets[3],
+          offsets[4],
           LocalizedPriceSchema.deserialize,
           allOffsets,
         ) ??
         LocalizedPrice(),
   );
-  object.entryTime = reader.readDateTime(offsets[1]);
-  object.entryType = reader.readLong(offsets[2]);
+  object.enabled = reader.readBool(offsets[0]);
+  object.entryTime = reader.readDateTime(offsets[2]);
+  object.entryType = reader.readLong(offsets[3]);
   object.id = id;
   return object;
 }
@@ -839,12 +901,14 @@ P _budgetEntryDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 1:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 3:
+      return (reader.readLong(offset)) as P;
+    case 4:
       return (reader.readObjectOrNull<LocalizedPrice>(
             offset,
             LocalizedPriceSchema.deserialize,
@@ -950,6 +1014,16 @@ extension BudgetEntryQueryWhere
 
 extension BudgetEntryQueryFilter
     on QueryBuilder<BudgetEntry, BudgetEntry, QFilterCondition> {
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition> enabledEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'enabled',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<BudgetEntry, BudgetEntry, QAfterFilterCondition>
       entryNameEqualTo(
     String value, {
@@ -1280,6 +1354,18 @@ extension BudgetEntryQueryLinks
 
 extension BudgetEntryQuerySortBy
     on QueryBuilder<BudgetEntry, BudgetEntry, QSortBy> {
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterSortBy> sortByEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'enabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterSortBy> sortByEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'enabled', Sort.desc);
+    });
+  }
+
   QueryBuilder<BudgetEntry, BudgetEntry, QAfterSortBy> sortByEntryName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'entryName', Sort.asc);
@@ -1319,6 +1405,18 @@ extension BudgetEntryQuerySortBy
 
 extension BudgetEntryQuerySortThenBy
     on QueryBuilder<BudgetEntry, BudgetEntry, QSortThenBy> {
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterSortBy> thenByEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'enabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BudgetEntry, BudgetEntry, QAfterSortBy> thenByEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'enabled', Sort.desc);
+    });
+  }
+
   QueryBuilder<BudgetEntry, BudgetEntry, QAfterSortBy> thenByEntryName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'entryName', Sort.asc);
@@ -1370,6 +1468,12 @@ extension BudgetEntryQuerySortThenBy
 
 extension BudgetEntryQueryWhereDistinct
     on QueryBuilder<BudgetEntry, BudgetEntry, QDistinct> {
+  QueryBuilder<BudgetEntry, BudgetEntry, QDistinct> distinctByEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'enabled');
+    });
+  }
+
   QueryBuilder<BudgetEntry, BudgetEntry, QDistinct> distinctByEntryName(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1395,6 +1499,12 @@ extension BudgetEntryQueryProperty
   QueryBuilder<BudgetEntry, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<BudgetEntry, bool, QQueryOperations> enabledProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'enabled');
     });
   }
 

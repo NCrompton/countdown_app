@@ -46,15 +46,28 @@ class BudgetThreadProvider extends _$BudgetThreadProvider {
       });
     }
     
-    Future<void> deleteBudgetThread(Id threadId) async {
+    Future<void> deleteBudgetThread(BudgetThread thread) async {
       state = const AsyncValue.loading();
 
-      ref.read(supabaseServiceProvider.notifier).deleteThread(threadId);
       state = await AsyncValue.guard(() async {
-        final db = await BudgetDatabase.getInstance();
+        thread.enabled = false;
+        await db.updateThread(thread);
+        // return state.value!..removeWhere((t) => t.id == threadId);
+        return _fetchThreads();
+      });
+
+      await backup.deleteThread(thread.id);
+    }
+
+    Future<void> hardDeleteBudgetThread(Id threadId) async {
+      state = const AsyncValue.loading();
+
+      state = await AsyncValue.guard(() async {
         await db.deleteThread(threadId);
         // return state.value!..removeWhere((t) => t.id == threadId);
         return _fetchThreads();
       });
+
+      await backup.deleteEntry(threadId);
     }
 }

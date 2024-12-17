@@ -8,6 +8,7 @@ part 'budget_schema.g.dart';
 class BudgetThread {
   Id id = Isar.autoIncrement;
   String threadName;
+  bool enabled = true;
 
   @Enumerated(EnumType.name)
   Currency preferredCurrency;
@@ -41,6 +42,7 @@ class BudgetEntry {
   DateTime entryTime;
   int entryType;
   IsarLink<BudgetThread> thread = IsarLink<BudgetThread>();
+  bool enabled = true;
 
   // @ignore
   // BudgetEntryType get entryType => typeLink ?? BudgetEntryType.defaultType();

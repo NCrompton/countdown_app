@@ -32,7 +32,7 @@ extension BudgetThreadDatabase on BudgetDatabase {
   }
 
   Future<List<BudgetThread>> getAllThreads() async {
-    return await _isar.budgetThreads.where().findAll();
+    return await _isar.budgetThreads.where().filter().enabledEqualTo(true).findAll();
   }
 
   Future<Id> createThread(BudgetThread thread) async {
@@ -66,12 +66,12 @@ extension BudgetEntryDatabase on BudgetDatabase {
   }
 
   Future<List<BudgetEntry>> getEntriesFromThread(Id threadId) async {
-    return (await _isar.budgetThreads.filter().idEqualTo(threadId).findFirst())!.budgets.toList()
+    return (await _isar.budgetThreads.filter().idEqualTo(threadId).findFirst())!.budgets.where((i) => i.enabled).toList()
       ..sortByCreateTimeAsc();
   }
 
   Future<List<BudgetEntry>> getAllEntries() async {
-    return _isar.budgetEntrys.where().sortByEntryTime().findAll();
+    return _isar.budgetEntrys.where().filter().enabledEqualTo(true).sortByEntryTime().findAll();
   }
 
   Future<Id> createEntry(BudgetEntry entry) async {
@@ -86,6 +86,12 @@ extension BudgetEntryDatabase on BudgetDatabase {
     });
   }
 
+  Future<bool> deleteEntry(Id id) async {
+    return await _isar.writeTxn(() async {
+      return await _isar.budgetEntrys.delete(id);
+    });
+  }
+
 /// sync transaction allow BackLink operation
   Id createEntrySync(BudgetEntry entry) {
     return _isar.writeTxnSync(() {
@@ -96,12 +102,6 @@ extension BudgetEntryDatabase on BudgetDatabase {
   bool updateEntrySync(BudgetEntry entry) {
     return _isar.writeTxnSync(() {
       return _isar.budgetEntrys.putSync(entry) > 0;
-    });
-  }
-
-  Future<bool> deleteEntry(Id id) async {
-    return await _isar.writeTxn(() async {
-      return await _isar.budgetEntrys.delete(id);
     });
   }
 }

@@ -65,6 +65,19 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
   Future<bool> deleteEntry(BudgetEntry entry) async {
     bool success = true;
     state = await AsyncValue.guard(() async {
+      entry.enabled = false; // disable the entry
+      await db.updateEntry(entry);
+
+      return _fetchAllEntries();
+    }, (_) => (success = false));
+    await resetAllBudgets(entry.thread.value?.id);
+    backup.deleteEntry(entry.id);
+    return success;
+  }
+
+  Future<bool> hardDeleteEntry(BudgetEntry entry) async {
+    bool success = true;
+    state = await AsyncValue.guard(() async {
       final thread = entry.thread.value;
       // TODO: delete
       if (thread != null) {
