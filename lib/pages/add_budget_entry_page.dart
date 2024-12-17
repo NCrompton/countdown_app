@@ -30,47 +30,6 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
   int _selectedType = 0;
 
   final List<Currency> _currencies = Currency.values;
-  // List<BudgetEntryType>? _entryTypes;
-
-  // void _showAddTypeDialog() {
-  //   showCupertinoDialog(
-  //     context: context,
-  //     builder: (context) => CupertinoAlertDialog(
-  //       title: const Text('Add New Type'),
-  //       content: Padding(
-  //         padding: const EdgeInsets.only(top: 16.0),
-  //         child: CupertinoTextField(
-  //           controller: _newTypeController,
-  //           placeholder: 'Type name',
-  //           autofocus: true,
-  //         ),
-  //       ),
-  //       actions: [
-  //         CupertinoDialogAction(
-  //           isDestructiveAction: true,
-  //           child: const Text('Cancel'),
-  //           onPressed: () {
-  //             _newTypeController.clear();
-  //             Navigator.pop(context);
-  //           },
-  //         ),
-  //         CupertinoDialogAction(
-  //           child: const Text('Add'),
-  //           onPressed: () {
-  //             if (_newTypeController.text.isNotEmpty) {
-  //               setState(() {
-  //                 _entryTypes!.add(BudgetEntryType(name: _newTypeController.text));
-  //                 _selectedType = _entryTypes!.indexWhere((e) => e.typeName == _newTypeController.text);
-  //               });
-  //               _newTypeController.clear();
-  //             }
-  //             Navigator.pop(context);
-  //           },
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   void _showErrorDialog() {
     showCupertinoDialog(
@@ -282,24 +241,24 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
             ),
 
               // Submit Button
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: switch(state) {
-                    AsyncLoading() => const CupertinoButton.filled(
-                      onPressed: null,
-                      child: CircularProgressIndicator(), 
-                    ),
-                    _ => CupertinoButton.filled(
-                      onPressed: () => _submitForm(entryTypes: value),
-                      child: const Text('Add Entry'),
-                    ),
-                  }
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: switch(state) {
+                AsyncLoading() => const CupertinoButton.filled(
+                  onPressed: null,
+                  child: CircularProgressIndicator(), 
                 ),
-              ]
+                _ => CupertinoButton.filled(
+                  onPressed: () => _submitForm(entryTypes: value),
+                  child: const Text('Add Entry'),
+                ),
+              },
             ),
-            AsyncLoading() => const Center(child: CircularProgressIndicator()),
-            _ => const Center(child: Text("Error")),
-          }
+          ]
+        ),
+        AsyncLoading() => const Center(child: CircularProgressIndicator()),
+        _ => const Center(child: Text("Error")),
+      }
     );
   }
 }

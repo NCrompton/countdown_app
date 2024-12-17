@@ -74,7 +74,9 @@ class FloatingBottomDrawerState extends State<FloatingBottomDrawer> {
                       onVerticalDragUpdate: (details) {
                         setState(() {
                           /* prevent view go higher than original */
-                          if (_tapDownPos.dy <= 0 && details.delta.dy < 0 ) return;
+                          if (_tapDownPos.dy + details.delta.dy < 0 ) return;
+                          /* prevent view go below screen */
+                          if (_tapDownPos.dy + details.delta.dy > panelHeight) return;
                           _tapDownPos += details.delta;
                         });
                       },
