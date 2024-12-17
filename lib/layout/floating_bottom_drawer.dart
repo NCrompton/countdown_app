@@ -51,60 +51,54 @@ class FloatingBottomDrawerState extends State<FloatingBottomDrawer> {
               ),
 
               /* Bottom Drawer */
-              TapRegion(
-                onTapOutside: (_) {
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  widget.visibilityController.setVisibility(false);
-                },
-                child: Container(
-                  height: panelHeight - _tapDownPos.dy,
-                  decoration: BoxDecoration(
-                    color: CupertinoColors.systemBackground,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(20),
+              Container(
+                height: panelHeight - _tapDownPos.dy,
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemBackground,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: CupertinoColors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: CupertinoColors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, -2),
-                      ),
-                    ],
-                  ),
-                
-                  /* Main Content */
-                  child: Column(
-                    children: [
-                      /* Handle bar */
-                      GestureDetector(
-                        onVerticalDragUpdate: (details) {
-                          setState(() {
-                            /* prevent view go higher than original */
-                            if (_tapDownPos.dy + details.delta.dy < 0 ) return;
-                            /* prevent view go below screen */
-                            if (_tapDownPos.dy + details.delta.dy > panelHeight) return;
-                            _tapDownPos += details.delta;
-                          });
-                        },
-                        onVerticalDragEnd: (details) {
-                          setState(() {
-                            /* more natrual experience */
-                            if (_tapDownPos.dy > panelHeight * 0.9) {
-                              widget.visibilityController.setVisibility(false);
-                            }
-                            _tapDownPos = Offset.zero;
-                          });
-                          if (details.primaryVelocity! > 0) widget.visibilityController.setVisibility(false);
-                        },
-                        child: _buildDragToDismissSection(),
-                      ),
-                
-                      /* Panel content */
-                      Expanded(
-                        child: widget.child,
-                      ),
-                    ],
-                  ),
+                  ],
+                ),
+              
+                /* Main Content */
+                child: Column(
+                  children: [
+                    /* Handle bar */
+                    GestureDetector(
+                      onVerticalDragUpdate: (details) {
+                        setState(() {
+                          /* prevent view go higher than original */
+                          if (_tapDownPos.dy + details.delta.dy < 0 ) return;
+                          /* prevent view go below screen */
+                          if (_tapDownPos.dy + details.delta.dy > panelHeight) return;
+                          _tapDownPos += details.delta;
+                        });
+                      },
+                      onVerticalDragEnd: (details) {
+                        setState(() {
+                          /* more natrual experience */
+                          if (_tapDownPos.dy > panelHeight * 0.9) {
+                            widget.visibilityController.setVisibility(false);
+                          }
+                          _tapDownPos = Offset.zero;
+                        });
+                        if (details.primaryVelocity! > 0) widget.visibilityController.setVisibility(false);
+                      },
+                      child: _buildDragToDismissSection(),
+                    ),
+              
+                    /* Panel content */
+                    Expanded(
+                      child: widget.child,
+                    ),
+                  ],
                 ),
               ),
             ]
