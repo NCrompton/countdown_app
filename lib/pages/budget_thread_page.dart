@@ -44,43 +44,45 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
     final state = (widget.thread != null)
       ? ref.watch(budgetThreadEntryProviderProvider(widget.thread!.id))
       : ref.watch(budgetEntriesProviderProvider);
-    return CustomScrollView(
-      slivers: [
-        CupertinoSliverRefreshControl(
-          onRefresh: () => 
-            (widget.thread != null)
-              ? ref.refresh(budgetThreadEntryProviderProvider(widget.thread!.id).future)
-              : ref.refresh(budgetEntriesProviderProvider.future),
-        ),
-        SliverToBoxAdapter(
-          child: switch(state) {
-            AsyncData(:final value) => 
-              CupertinoListSection(
-                children: [...value.map((entry) {
-                  entry.thread.value = widget.thread;
-                  return Builder(
-                    builder: (context) {
-                      return BudgetEntryCell(
-                        onTap: () {
-                          openPageSide(
-                            context, 
-                            BudgetEntryPage(entry: entry),
-                          );
-                        },
-                        entry: entry,
-                      );
-                    },
-                  );
-                }).toList(),
-                // BudgetEntryAddCell(onTap: () => visibilityController.setVisibility(true)), 
-                BudgetEntryAddCell(onTap: () => _showAddEntryPopup()), 
-              ]
-            ),
-            AsyncLoading() => const Center(child: CircularProgressIndicator()),
-            _ => const SizedBox(),
-          }
-        ),
-      ],
+    return SafeArea(
+      child: CustomScrollView(
+        slivers: [
+          CupertinoSliverRefreshControl(
+            onRefresh: () => 
+              (widget.thread != null)
+                ? ref.refresh(budgetThreadEntryProviderProvider(widget.thread!.id).future)
+                : ref.refresh(budgetEntriesProviderProvider.future),
+          ),
+          SliverToBoxAdapter(
+            child: switch(state) {
+              AsyncData(:final value) => 
+                CupertinoListSection(
+                  children: [...value.map((entry) {
+                    entry.thread.value = widget.thread;
+                    return Builder(
+                      builder: (context) {
+                        return BudgetEntryCell(
+                          onTap: () {
+                            openPageSide(
+                              context, 
+                              BudgetEntryPage(entry: entry),
+                            );
+                          },
+                          entry: entry,
+                        );
+                      },
+                    );
+                  }).toList(),
+                  // BudgetEntryAddCell(onTap: () => visibilityController.setVisibility(true)), 
+                  BudgetEntryAddCell(onTap: () => _showAddEntryPopup()), 
+                ]
+              ),
+              AsyncLoading() => const Center(child: CircularProgressIndicator()),
+              _ => const SizedBox(),
+            }
+          ),
+        ],
+      ),
     );
   }
 }
