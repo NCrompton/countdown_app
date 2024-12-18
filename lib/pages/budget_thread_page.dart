@@ -30,7 +30,9 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
             child: Container(
               height: 500,
               color: CupertinoColors.systemBackground,
-              child: AddBudgetEntryPage(thread: widget.thread, dismiss: (){})
+              child: AddBudgetEntryPage(thread: widget.thread, dismiss: (){
+                Navigator.of(context).pop();
+              })
             ),
           );
       }
