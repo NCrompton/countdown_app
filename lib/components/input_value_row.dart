@@ -36,7 +36,7 @@ class InputValueRow extends StatelessWidget {
                               TextInputType.text,
               decoration: BoxDecoration(
                                 border: Border.all(color: CupertinoColors.systemGrey),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(4),
                               ),
               padding: const EdgeInsets.all(12),
               inputFormatters: [

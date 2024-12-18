@@ -199,6 +199,14 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
         AsyncData(:final value) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Container(
+              padding: const EdgeInsets.only(top: 24, left: 16, right: 16),
+              child: const Text(
+                "New Entry",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+              ),
+            ),
+
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),

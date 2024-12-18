@@ -1,5 +1,4 @@
 import 'package:calendar/components/list_cell.dart';
-import 'package:calendar/layout/floating_bottom_drawer.dart';
 import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/pages/add_budget_entry_page.dart';
 import 'package:calendar/screens/budget_entry_page.dart';
@@ -21,53 +20,65 @@ class BudgetThreadPage extends ConsumerStatefulWidget {
 
 class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
 
+  void _showAddEntryPopup() {
+    showCupertinoModalPopup(
+      context: context, 
+      builder: (BuildContext context) {
+        return 
+          CupertinoPopupSurface(
+            isSurfacePainted: true,
+            child: Container(
+              height: 500,
+              color: CupertinoColors.systemBackground,
+              child: AddBudgetEntryPage(thread: widget.thread, dismiss: (){})
+            ),
+          );
+      }
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = (widget.thread != null)
       ? ref.watch(budgetThreadEntryProviderProvider(widget.thread!.id))
       : ref.watch(budgetEntriesProviderProvider);
-    return FloatingBottomDrawerPage(
-      heightPortion: 0.7,
-      drawerChild: (dismiss) => AddBudgetEntryPage(thread: widget.thread, dismiss: dismiss),
-      builder: (context, visibilityController) {
-        return CustomScrollView(
-                    slivers: [
-                      CupertinoSliverRefreshControl(
-                        onRefresh: () => 
-                          (widget.thread != null)
-                            ? ref.refresh(budgetThreadEntryProviderProvider(widget.thread!.id).future)
-                            : ref.refresh(budgetEntriesProviderProvider.future),
-                      ),
-                      SliverToBoxAdapter(
-                        child: switch(state) {
-                          AsyncData(:final value) => 
-                            CupertinoListSection(
-                              children: [...value.map((entry) {
-                                entry.thread.value = widget.thread;
-                                return Builder(
-                                  builder: (context) {
-                                    return BudgetEntryCell(
-                                      onTap: () {
-                                        openPageSide(
-                                          context, 
-                                          BudgetEntryPage(entry: entry),
-                                        );
-                                      },
-                                      entry: entry,
-                                    );
-                                  },
-                                );
-                              }).toList(),
-                              BudgetEntryAddCell(onTap: () => visibilityController.setVisibility(true)), 
-                            ]
-                          ),
-                          AsyncLoading() => const Center(child: CircularProgressIndicator()),
-                          _ => const SizedBox(),
-                        }
-                      ),
-                    ],
+    return CustomScrollView(
+      slivers: [
+        CupertinoSliverRefreshControl(
+          onRefresh: () => 
+            (widget.thread != null)
+              ? ref.refresh(budgetThreadEntryProviderProvider(widget.thread!.id).future)
+              : ref.refresh(budgetEntriesProviderProvider.future),
+        ),
+        SliverToBoxAdapter(
+          child: switch(state) {
+            AsyncData(:final value) => 
+              CupertinoListSection(
+                children: [...value.map((entry) {
+                  entry.thread.value = widget.thread;
+                  return Builder(
+                    builder: (context) {
+                      return BudgetEntryCell(
+                        onTap: () {
+                          openPageSide(
+                            context, 
+                            BudgetEntryPage(entry: entry),
+                          );
+                        },
+                        entry: entry,
+                      );
+                    },
                   );
-      }, 
+                }).toList(),
+                // BudgetEntryAddCell(onTap: () => visibilityController.setVisibility(true)), 
+                BudgetEntryAddCell(onTap: () => _showAddEntryPopup()), 
+              ]
+            ),
+            AsyncLoading() => const Center(child: CircularProgressIndicator()),
+            _ => const SizedBox(),
+          }
+        ),
+      ],
     );
   }
 }
@@ -80,20 +91,23 @@ class BudgetEntryCell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final type = ref.watch(budgetEntryTypeProviderProvider).value![entry.entryType];
-    return ListCell(
-      onTap: onTap,
-      leftWidget: Text(entry.entryName),
-      subLeftWidget: Text(entry.entryTime.formatToDisplay()),
-      rightWidget: Text("${entry.price.currency.name.toUpperCase()} ${entry.price.value}", 
-        style: TextStyle(color: entry.price.value < 0 ? const Color(negativeColor) : const Color(positiveColor))
+    final state = ref.watch(budgetEntryTypeProviderProvider);
+    return switch(state) {
+      AsyncData(:final value) => ListCell(
+        onTap: onTap,
+        leftWidget: Text(entry.entryName),
+        subLeftWidget: Text(entry.entryTime.formatToDisplay()),
+        rightWidget: Text("${entry.price.currency.name.toUpperCase()} ${entry.price.value}", 
+          style: TextStyle(color: entry.price.value < 0 ? const Color(negativeColor) : const Color(positiveColor))
+        ),
+        leading: CircleAvatar(
+          backgroundColor: value[entry.entryType].color,
+          foregroundColor: value[entry.entryType].color.computeLuminance() > 0.5 ? Colors.black : Colors.white,
+          child: Icon(value[entry.entryType].icon),
+        ),
       ),
-      leading: CircleAvatar(
-        backgroundColor: type.color,
-        foregroundColor: type.color.computeLuminance() > 0.5 ? Colors.black : Colors.white,
-        child: Icon(type.icon),
-      ),
-    );
+      _ => const SizedBox(), 
+    };
   }
 }
 
