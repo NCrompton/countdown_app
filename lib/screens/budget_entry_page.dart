@@ -10,12 +10,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BudgetEntryPage extends ConsumerStatefulWidget {
-  final BudgetEntry entry;
-
   const BudgetEntryPage({
     super.key,
     required this.entry,
   });
+
+  final BudgetEntry entry;
+  BudgetThread? get thread => entry.thread.value;
 
   @override
   ConsumerState<BudgetEntryPage> createState() => _BudgetEntryPageState();
@@ -139,11 +140,11 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
   }
 
   Future<bool> _updateEntry(BudgetEntry newEntry) async {
-    return ref.read(budgetEntriesProviderProvider.notifier).updateEntry(newEntry);
+    return ref.read(budgetEntriesProviderProvider(widget.thread?.id).notifier).updateEntry(newEntry);
   }
   
   Future<void> _deleteEntry() async {
-    final success = await ref.read(budgetEntriesProviderProvider.notifier).deleteEntry(widget.entry);
+    final success = await ref.read(budgetEntriesProviderProvider(widget.thread?.id).notifier).deleteEntry(widget.entry);
     if (mounted && success) {
       Navigator.pop(context);
     }
@@ -157,7 +158,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(budgetEntriesProviderProvider);
+    final state = ref.watch(budgetEntriesProviderProvider(widget.thread?.id));
     initTypeList();
     return CupertinoPageScaffold(
       resizeToAvoidBottomInset: false,

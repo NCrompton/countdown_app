@@ -7,24 +7,7 @@ part of 'budget_entry_provider.dart';
 // **************************************************************************
 
 String _$budgetEntriesProviderHash() =>
-    r'43bcb3ec6e80089ad559e39702f53c62f13b853b';
-
-/// See also [BudgetEntriesProvider].
-@ProviderFor(BudgetEntriesProvider)
-final budgetEntriesProviderProvider = AutoDisposeAsyncNotifierProvider<
-    BudgetEntriesProvider, List<BudgetEntry>>.internal(
-  BudgetEntriesProvider.new,
-  name: r'budgetEntriesProviderProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$budgetEntriesProviderHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef _$BudgetEntriesProvider = AutoDisposeAsyncNotifier<List<BudgetEntry>>;
-String _$budgetThreadEntryProviderHash() =>
-    r'16bd912577410325c0b0123c59aedd86aa1da0b8';
+    r'de181f6f54848002309e397295af4eb94cc88280';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -47,37 +30,37 @@ class _SystemHash {
   }
 }
 
-abstract class _$BudgetThreadEntryProvider
+abstract class _$BudgetEntriesProvider
     extends BuildlessAutoDisposeAsyncNotifier<List<BudgetEntry>> {
-  late final int threadId;
+  late final int? threadId;
 
   FutureOr<List<BudgetEntry>> build(
-    int threadId,
+    int? threadId,
   );
 }
 
-/// See also [BudgetThreadEntryProvider].
-@ProviderFor(BudgetThreadEntryProvider)
-const budgetThreadEntryProviderProvider = BudgetThreadEntryProviderFamily();
+/// See also [BudgetEntriesProvider].
+@ProviderFor(BudgetEntriesProvider)
+const budgetEntriesProviderProvider = BudgetEntriesProviderFamily();
 
-/// See also [BudgetThreadEntryProvider].
-class BudgetThreadEntryProviderFamily
+/// See also [BudgetEntriesProvider].
+class BudgetEntriesProviderFamily
     extends Family<AsyncValue<List<BudgetEntry>>> {
-  /// See also [BudgetThreadEntryProvider].
-  const BudgetThreadEntryProviderFamily();
+  /// See also [BudgetEntriesProvider].
+  const BudgetEntriesProviderFamily();
 
-  /// See also [BudgetThreadEntryProvider].
-  BudgetThreadEntryProviderProvider call(
-    int threadId,
+  /// See also [BudgetEntriesProvider].
+  BudgetEntriesProviderProvider call(
+    int? threadId,
   ) {
-    return BudgetThreadEntryProviderProvider(
+    return BudgetEntriesProviderProvider(
       threadId,
     );
   }
 
   @override
-  BudgetThreadEntryProviderProvider getProviderOverride(
-    covariant BudgetThreadEntryProviderProvider provider,
+  BudgetEntriesProviderProvider getProviderOverride(
+    covariant BudgetEntriesProviderProvider provider,
   ) {
     return call(
       provider.threadId,
@@ -96,31 +79,31 @@ class BudgetThreadEntryProviderFamily
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'budgetThreadEntryProviderProvider';
+  String? get name => r'budgetEntriesProviderProvider';
 }
 
-/// See also [BudgetThreadEntryProvider].
-class BudgetThreadEntryProviderProvider
-    extends AutoDisposeAsyncNotifierProviderImpl<BudgetThreadEntryProvider,
+/// See also [BudgetEntriesProvider].
+class BudgetEntriesProviderProvider
+    extends AutoDisposeAsyncNotifierProviderImpl<BudgetEntriesProvider,
         List<BudgetEntry>> {
-  /// See also [BudgetThreadEntryProvider].
-  BudgetThreadEntryProviderProvider(
-    int threadId,
+  /// See also [BudgetEntriesProvider].
+  BudgetEntriesProviderProvider(
+    int? threadId,
   ) : this._internal(
-          () => BudgetThreadEntryProvider()..threadId = threadId,
-          from: budgetThreadEntryProviderProvider,
-          name: r'budgetThreadEntryProviderProvider',
+          () => BudgetEntriesProvider()..threadId = threadId,
+          from: budgetEntriesProviderProvider,
+          name: r'budgetEntriesProviderProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$budgetThreadEntryProviderHash,
-          dependencies: BudgetThreadEntryProviderFamily._dependencies,
+                  : _$budgetEntriesProviderHash,
+          dependencies: BudgetEntriesProviderFamily._dependencies,
           allTransitiveDependencies:
-              BudgetThreadEntryProviderFamily._allTransitiveDependencies,
+              BudgetEntriesProviderFamily._allTransitiveDependencies,
           threadId: threadId,
         );
 
-  BudgetThreadEntryProviderProvider._internal(
+  BudgetEntriesProviderProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -130,11 +113,11 @@ class BudgetThreadEntryProviderProvider
     required this.threadId,
   }) : super.internal();
 
-  final int threadId;
+  final int? threadId;
 
   @override
   FutureOr<List<BudgetEntry>> runNotifierBuild(
-    covariant BudgetThreadEntryProvider notifier,
+    covariant BudgetEntriesProvider notifier,
   ) {
     return notifier.build(
       threadId,
@@ -142,10 +125,10 @@ class BudgetThreadEntryProviderProvider
   }
 
   @override
-  Override overrideWith(BudgetThreadEntryProvider Function() create) {
+  Override overrideWith(BudgetEntriesProvider Function() create) {
     return ProviderOverride(
       origin: this,
-      override: BudgetThreadEntryProviderProvider._internal(
+      override: BudgetEntriesProviderProvider._internal(
         () => create()..threadId = threadId,
         from: from,
         name: null,
@@ -158,15 +141,14 @@ class BudgetThreadEntryProviderProvider
   }
 
   @override
-  AutoDisposeAsyncNotifierProviderElement<BudgetThreadEntryProvider,
+  AutoDisposeAsyncNotifierProviderElement<BudgetEntriesProvider,
       List<BudgetEntry>> createElement() {
-    return _BudgetThreadEntryProviderProviderElement(this);
+    return _BudgetEntriesProviderProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is BudgetThreadEntryProviderProvider &&
-        other.threadId == threadId;
+    return other is BudgetEntriesProviderProvider && other.threadId == threadId;
   }
 
   @override
@@ -178,19 +160,19 @@ class BudgetThreadEntryProviderProvider
   }
 }
 
-mixin BudgetThreadEntryProviderRef
+mixin BudgetEntriesProviderRef
     on AutoDisposeAsyncNotifierProviderRef<List<BudgetEntry>> {
   /// The parameter `threadId` of this provider.
-  int get threadId;
+  int? get threadId;
 }
 
-class _BudgetThreadEntryProviderProviderElement
-    extends AutoDisposeAsyncNotifierProviderElement<BudgetThreadEntryProvider,
-        List<BudgetEntry>> with BudgetThreadEntryProviderRef {
-  _BudgetThreadEntryProviderProviderElement(super.provider);
+class _BudgetEntriesProviderProviderElement
+    extends AutoDisposeAsyncNotifierProviderElement<BudgetEntriesProvider,
+        List<BudgetEntry>> with BudgetEntriesProviderRef {
+  _BudgetEntriesProviderProviderElement(super.provider);
 
   @override
-  int get threadId => (origin as BudgetThreadEntryProviderProvider).threadId;
+  int? get threadId => (origin as BudgetEntriesProviderProvider).threadId;
 }
 
 String _$budgetEntryTypeProviderHash() =>

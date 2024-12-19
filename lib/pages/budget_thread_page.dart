@@ -41,17 +41,13 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
 
   @override
   Widget build(BuildContext context) {
-    final state = (widget.thread != null)
-      ? ref.watch(budgetThreadEntryProviderProvider(widget.thread!.id))
-      : ref.watch(budgetEntriesProviderProvider);
+    final state = ref.watch(budgetEntriesProviderProvider(widget.thread?.id));
     return SafeArea(
       child: CustomScrollView(
         slivers: [
           CupertinoSliverRefreshControl(
             onRefresh: () => 
-              (widget.thread != null)
-                ? ref.refresh(budgetThreadEntryProviderProvider(widget.thread!.id).future)
-                : ref.refresh(budgetEntriesProviderProvider.future),
+              ref.refresh(budgetEntriesProviderProvider(widget.thread?.id).future)
           ),
           SliverToBoxAdapter(
             child: switch(state) {

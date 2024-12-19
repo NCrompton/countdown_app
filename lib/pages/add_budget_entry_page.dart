@@ -130,13 +130,9 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
     );
 
     onLoading(context);
-    if (widget.thread != null) {
-      final _ = await ref.read(budgetThreadEntryProviderProvider(widget.thread!.id).notifier)
-        .addNewEntry(entry);
-    } else {
-      final _ = await ref.read(budgetEntriesProviderProvider.notifier)
-        .addEntries(entry);
-    }
+    final _ = await ref.read(budgetEntriesProviderProvider(widget.thread?.id).notifier)
+      .createEntry(entry);
+
     // TODO: handle succes
     if (mounted) finishLoading(context);
 
@@ -189,9 +185,7 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
   @override
   Widget build(BuildContext context) {
     final typeState = ref.watch(budgetEntryTypeProviderProvider);
-    final state = (widget.thread == null) 
-      ? ref.watch(budgetEntriesProviderProvider)
-      : ref.watch(budgetThreadEntryProviderProvider(widget.thread!.id));
+    final state = ref.watch(budgetEntriesProviderProvider(widget.thread?.id));
 
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),

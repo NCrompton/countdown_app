@@ -7,7 +7,7 @@ part of 'budget_thread_provider.dart';
 // **************************************************************************
 
 String _$budgetThreadProviderHash() =>
-    r'3893ec0cad1a76288dd849c2b5e25ce0cbe48b57';
+    r'5016135e71d7f13b0a9c2580998c048dece69c20';
 
 /// See also [BudgetThreadProvider].
 @ProviderFor(BudgetThreadProvider)
