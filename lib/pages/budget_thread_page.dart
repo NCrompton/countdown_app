@@ -1,10 +1,8 @@
-import 'package:calendar/components/list_cell.dart';
+import 'package:calendar/components/budget_entry_cell.dart';
 import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/pages/add_budget_entry_page.dart';
 import 'package:calendar/screens/budget_entry_page.dart';
 import 'package:calendar/providers/budget_entry_provider.dart';
-import 'package:calendar/utils/const.dart';
-import 'package:calendar/utils/date_util.dart';
 import 'package:calendar/utils/route_transition.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -80,34 +78,6 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
         ],
       ),
     );
-  }
-}
-
-class BudgetEntryCell extends ConsumerWidget {
-  const BudgetEntryCell({super.key, required this.entry, this.onTap});
-
-  final BudgetEntry entry;
-  final GestureTapCallback? onTap;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(budgetEntryTypeProviderProvider);
-    return switch(state) {
-      AsyncData(:final value) => ListCell(
-        onTap: onTap,
-        leftWidget: Text(entry.entryName),
-        subLeftWidget: Text(entry.entryTime.formatToDisplay()),
-        rightWidget: Text("${entry.price.currency.name.toUpperCase()} ${entry.price.value}", 
-          style: TextStyle(color: entry.price.value < 0 ? const Color(negativeColor) : const Color(positiveColor))
-        ),
-        leading: CircleAvatar(
-          backgroundColor: value[entry.entryType].color,
-          foregroundColor: value[entry.entryType].color.computeLuminance() > 0.5 ? Colors.black : Colors.white,
-          child: Icon(value[entry.entryType].icon),
-        ),
-      ),
-      _ => const SizedBox(), 
-    };
   }
 }
 
