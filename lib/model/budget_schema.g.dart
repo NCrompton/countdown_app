@@ -120,18 +120,18 @@ const _BudgetThreadpreferredCurrencyEnumValueMap = {
   r'jpy': r'jpy',
   r'usd': r'usd',
   r'thb': r'thb',
-  r'rmb': r'rmb',
-  r'ntw': r'ntw',
-  r'euro': r'euro',
+  r'cny': r'cny',
+  r'twd': r'twd',
+  r'eur': r'eur',
 };
 const _BudgetThreadpreferredCurrencyValueEnumMap = {
   r'hkd': Currency.hkd,
   r'jpy': Currency.jpy,
   r'usd': Currency.usd,
   r'thb': Currency.thb,
-  r'rmb': Currency.rmb,
-  r'ntw': Currency.ntw,
-  r'euro': Currency.euro,
+  r'cny': Currency.cny,
+  r'twd': Currency.twd,
+  r'eur': Currency.eur,
 };
 
 Id _budgetThreadGetId(BudgetThread object) {
@@ -2272,18 +2272,18 @@ const _LocalizedPricecurrencyEnumValueMap = {
   r'jpy': r'jpy',
   r'usd': r'usd',
   r'thb': r'thb',
-  r'rmb': r'rmb',
-  r'ntw': r'ntw',
-  r'euro': r'euro',
+  r'cny': r'cny',
+  r'twd': r'twd',
+  r'eur': r'eur',
 };
 const _LocalizedPricecurrencyValueEnumMap = {
   r'hkd': Currency.hkd,
   r'jpy': Currency.jpy,
   r'usd': Currency.usd,
   r'thb': Currency.thb,
-  r'rmb': Currency.rmb,
-  r'ntw': Currency.ntw,
-  r'euro': Currency.euro,
+  r'cny': Currency.cny,
+  r'twd': Currency.twd,
+  r'eur': Currency.eur,
 };
 
 extension LocalizedPriceQueryFilter

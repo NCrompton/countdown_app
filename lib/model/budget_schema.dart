@@ -158,9 +158,9 @@ enum Currency with ProjectEnum{
   jpy, 
   usd,
   thb,
-  rmb,
-  ntw,
-  euro;
+  cny,
+  twd,
+  eur;
 
   @override
   String get displayName => name.toUpperCase();

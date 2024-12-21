@@ -21,7 +21,7 @@ final entry3 = BudgetEntry(entryName: "entry3", price: LocalizedPrice(valueParam
 
 final thread1 = BudgetThread(threadName: "Test", preferredCurrency: Currency.hkd)..budgets.add(entry1)..budgets.add(entry2);
 final thread2 = BudgetThread(threadName: "Test2", preferredCurrency: Currency.jpy)..budgets.add(entry3);
-final thread3 = BudgetThread(threadName: "Test3", preferredCurrency: Currency.euro);
+final thread3 = BudgetThread(threadName: "Test3", preferredCurrency: Currency.eur);
 
 final List<BudgetThread> dummyBudgetThread = [thread1, thread2, thread3];
 

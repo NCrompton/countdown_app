@@ -7,7 +7,7 @@ part of 'budget_entry_provider.dart';
 // **************************************************************************
 
 String _$budgetEntriesProviderHash() =>
-    r'de181f6f54848002309e397295af4eb94cc88280';
+    r'6638e11ff2b518b15ddf6a61e2e9b0d0821a51c9';
 
 /// Copied from Dart SDK
 class _SystemHash {
