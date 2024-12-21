@@ -19,6 +19,25 @@ class BudgetTypePage extends ConsumerStatefulWidget {
 }
 
 class _BudgetTypePageState extends ConsumerState<BudgetTypePage> {
+  double portion = 0;
+  double typeSpending = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    getPortion();
+  }
+
+  void getPortion() async {
+    await ref.read(budgetEntriesProviderProvider(null).future);
+    final totalSpending = await ref.read(budgetEntriesProviderProvider(null).notifier).exchangedTotalSpending();
+    final typeSpending = await ref.read(budgetEntriesProviderProvider(null).notifier).exchangeEntryTypeTotal(widget.type);
+    setState(() {
+      this.typeSpending = typeSpending;
+      portion = 100 * typeSpending / totalSpending;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(budgetEntriesProviderProvider(null));
@@ -33,15 +52,25 @@ class _BudgetTypePageState extends ConsumerState<BudgetTypePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  widget.type.typeName,
-                  style: const TextStyle(
-                    fontSize: 24,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.type.typeName,
+                    style: const TextStyle(
+                      fontSize: 24,
+                    ),
                   ),
-                )
+                  const SizedBox(height: 6),
+                  Text(
+                    "HKD ${typeSpending.toStringAsFixed(2)}",
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w300,
+                    )
+                  ),
+                ]
               ),
             ),
             Container(
@@ -65,7 +94,7 @@ class _BudgetTypePageState extends ConsumerState<BudgetTypePage> {
                     width: width,
                     child: PortionCircle(
                       size: size,
-                      percent: 45.5,
+                      percent: portion,
                       color: widget.type.color,
                     ),
                   ),
@@ -77,12 +106,16 @@ class _BudgetTypePageState extends ConsumerState<BudgetTypePage> {
               child: switch(state) {
                   AsyncData(:final value) => value.isEmpty 
                     ? const SizedBox()
-                    : CupertinoListSection(
-                        children: (value.where((v) => v.entryType == widget.type.id)
-                          .map((v) =>
-                            BudgetEntryCell(entry: v)
-                        ).toList()),
-                      ),
+                    : Builder(
+                      builder: (context) {
+                        return CupertinoListSection(
+                            children: (value.where((v) => v.entryType == widget.type.id)
+                              .map((v) =>
+                                BudgetEntryCell(entry: v)
+                            ).toList()),
+                          );
+                      }
+                    ),
                   AsyncLoading() => const CircularProgressIndicator(),
                   _ => const Center(child: Text("Encountered error")),
               }

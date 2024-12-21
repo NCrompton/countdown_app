@@ -1,6 +1,7 @@
 import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/providers/budget_thread_provider.dart';
 import 'package:calendar/services/budget_database.dart';
+import 'package:calendar/services/exchange_service.dart';
 import 'package:calendar/services/supabase_service.dart';
 import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -122,6 +123,25 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
 
     backup.saveEntry(entry);
     return success;
+  }
+
+  Future<double> _getExchangedTotal(List<BudgetEntry> entries) async {
+    await ref.read(exchangeServiceProvider.future);
+    double total = 0;
+    for (var e in entries) {
+      total += ref.read(exchangeServiceProvider.notifier).getExchangedPrice(e.price);
+    }
+    return total;
+  }
+
+  Future<double> exchangedTotalSpending() async {
+    final entries = state.value!;
+    return _getExchangedTotal(entries);
+  }
+
+  Future<double> exchangeEntryTypeTotal(BudgetEntryType type) async {
+    final entries = state.value!.where((e) => e.entryType == type.id).toList();
+    return _getExchangedTotal(entries);
   }
 }
 

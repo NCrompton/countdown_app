@@ -7,7 +7,7 @@ part 'exchange_service.g.dart';
 
 typedef ExchangeModel = Map<Currency, double>;
 
-@riverpod
+@Riverpod(keepAlive: true)
 class ExchangeService extends _$ExchangeService {
 
   final _dio = Dio(
@@ -23,7 +23,7 @@ class ExchangeService extends _$ExchangeService {
     final res = await _dio.get(
       Endpoints.exchangeInDefaultCur,
     );
-    
+
     Map<String, dynamic>? exchangeList = res.data['rates'] as Map<String, dynamic>;
     for (final c in Currency.values) {
       if (exchangeList.containsKey(c.name.toUpperCase())) {
@@ -36,5 +36,12 @@ class ExchangeService extends _$ExchangeService {
   @override
   Future<ExchangeModel> build() async {
     return _fetchExchangeRate();
+  }
+
+  double getExchangedPrice(LocalizedPrice price) {
+    final exchangeRate = state.value;
+    if (exchangeRate == null) return 0;
+
+    return price.value / exchangeRate[price.currency]! ; 
   }
 }
