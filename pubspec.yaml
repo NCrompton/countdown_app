@@ -27,6 +27,7 @@ dependencies:
   path_provider: ^2.1.5
   supabase_flutter: ^2.8.1
   dio: ^5.7.0
+  logger: ^2.5.0
 
 dev_dependencies:
   flutter_test:

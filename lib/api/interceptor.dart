@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 
 class LoggerInterceptor extends Interceptor {
   
-  final logger = Logger();
+  final logger = Log();
 
   @override
   Future onError(DioException err, ErrorInterceptorHandler handler) async {

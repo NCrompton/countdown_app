@@ -34,10 +34,8 @@ class AsyncDateState extends _$AsyncDateState {
   NativeWidgetManager nativeWidgetManager = NativeWidgetManager();
 
   AsyncDateState() {
-    print("initiating manager");
     LocalStorageManager.instance().then((v) {
       manager = v;
-      print("done initiating manager");
     });
   }
 

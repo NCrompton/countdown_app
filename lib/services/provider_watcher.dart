@@ -1,3 +1,4 @@
+import 'package:calendar/utils/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ProjectObserver extends ProviderObserver {
@@ -7,7 +8,7 @@ class ProjectObserver extends ProviderObserver {
     Object? value,
     ProviderContainer container,
   ) {
-    print('Provider $provider was initialized with $value');
+    Log().log('Provider $provider was initialized with $value');
   }
 
   @override
@@ -15,7 +16,7 @@ class ProjectObserver extends ProviderObserver {
     ProviderBase<Object?> provider,
     ProviderContainer container,
   ) {
-    print('Provider $provider was disposed');
+    Log().log('Provider $provider was disposed');
   }
 
   @override
@@ -25,7 +26,7 @@ class ProjectObserver extends ProviderObserver {
     Object? newValue,
     ProviderContainer container,
   ) {
-    print('Provider $provider updated from $previousValue to $newValue');
+    Log().log('Provider $provider updated from $previousValue to $newValue');
   }
 
   @override
@@ -35,6 +36,6 @@ class ProjectObserver extends ProviderObserver {
     StackTrace stackTrace,
     ProviderContainer container,
   ) {
-    print('Provider $provider threw $error at $stackTrace');
+    Log().log('Provider $provider threw $error at $stackTrace');
   }
 }
