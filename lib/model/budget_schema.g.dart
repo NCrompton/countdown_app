@@ -878,7 +878,6 @@ BudgetEntry _budgetEntryDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = BudgetEntry(
-    entryName: reader.readString(offsets[1]),
     price: reader.readObjectOrNull<LocalizedPrice>(
           offsets[4],
           LocalizedPriceSchema.deserialize,
@@ -887,6 +886,7 @@ BudgetEntry _budgetEntryDeserialize(
         LocalizedPrice(),
   );
   object.enabled = reader.readBool(offsets[0]);
+  object.entryName = reader.readString(offsets[1]);
   object.entryTime = reader.readDateTime(offsets[2]);
   object.entryType = reader.readLong(offsets[3]);
   object.id = id;

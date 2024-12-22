@@ -6,7 +6,7 @@ part of 'date_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$asyncDateStateHash() => r'84a68eb7cff5724fe0628cb9c6e992b291f50f87';
+String _$asyncDateStateHash() => r'c50092e67db00648707cc92da29231aa402b3afe';
 
 /// See also [AsyncDateState].
 @ProviderFor(AsyncDateState)

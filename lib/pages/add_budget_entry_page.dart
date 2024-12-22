@@ -118,11 +118,11 @@ class _AddBudgetEntryPageState extends ConsumerState<AddBudgetEntryPage> {
   }
 
   void _submitForm({required List<BudgetEntryType> entryTypes}) async {
-    if (_nameController.text.isEmpty || _priceController.text.isEmpty) return _showErrorDialog();
+    if (_priceController.text.isEmpty) return _showErrorDialog();
 
     // Create and submit entry
     final entry =  BudgetEntry(
-      entryName: _nameController.text,
+      nameParam: _nameController.text,
       price: LocalizedPrice(valueParam: double.parse(_priceController.text), currencyParam: _selectedCurrency),
       type: entryTypes[_selectedType].id,
       time: _createTime,

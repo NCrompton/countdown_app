@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:calendar/utils/date_util.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 part 'budget_schema.g.dart';
@@ -48,12 +49,13 @@ class BudgetEntry {
   // BudgetEntryType get entryType => typeLink ?? BudgetEntryType.defaultType();
 
   BudgetEntry({
-    required this.entryName,
+    String? nameParam,
     required this.price,
     BudgetThread? threadParam,
     int? type,
     DateTime? time,
   }):
+    entryName = nameParam != null && nameParam.isNotEmpty ? nameParam : DateTime.now().formatToDisplay(),
     entryTime = time ?? DateTime.now(), 
     entryType = type ?? BudgetEntryType._defaultType.id,
     thread = IsarLink<BudgetThread>()..value = threadParam;
