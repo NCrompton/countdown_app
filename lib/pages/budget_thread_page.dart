@@ -80,7 +80,7 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
               ),
             ],
           ),
-          FloatingButton(
+          FloatingMenu(
             menuItems: [
               FloatingMenuItem( 
                 icon: Icons.delete, 

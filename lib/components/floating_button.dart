@@ -17,29 +17,35 @@ class FloatingMenuItem {
     color = color ?? CupertinoColors.activeBlue;
 }
 
-class FloatingButton extends StatefulWidget {
+class FloatingMenu extends StatefulWidget {
   final List<FloatingMenuItem> menuItems;
   final IconData icon;
   final Color backgroundColor;
   final Color iconColor;
-  final double size;
+  final double mainButtonSize;
   final EdgeInsets padding;
 
-  const FloatingButton({
+  const FloatingMenu({
     super.key,
     required this.menuItems,
     this.icon = CupertinoIcons.add,
     this.backgroundColor = CupertinoColors.activeBlue,
     this.iconColor = CupertinoColors.white,
-    this.size = 60,
+    this.mainButtonSize = 60,
     this.padding = const EdgeInsets.all(16),
   });
 
+  double get menuItemSize => mainButtonSize * 0.8;
+  (double right, double bottom) get menuItemPos => (
+    padding.right + (mainButtonSize - menuItemSize) / 2,
+    padding.bottom + (mainButtonSize - menuItemSize) / 2
+  );
+
   @override
-  State<FloatingButton> createState() => _FloatingButtonState();
+  State<FloatingMenu> createState() => _FloatingMenuState();
 }
 
-class _FloatingButtonState extends State<FloatingButton> with SingleTickerProviderStateMixin {
+class _FloatingMenuState extends State<FloatingMenu> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _expandAnimation;
   late Animation<double> _maskAnimation;
@@ -84,73 +90,85 @@ class _FloatingButtonState extends State<FloatingButton> with SingleTickerProvid
     });
   }
   
-  Widget _buildMenuItem(FloatingMenuItem item) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Label
-        if (item.title != null) 
-          SizeTransition(
-            sizeFactor: _expandAnimation,
-            axis: Axis.horizontal,
-            child: Padding(
-              padding: const EdgeInsets.all(3.0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: CupertinoColors.systemBackground,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: CupertinoColors.black.withOpacity(0.2),
-                      offset: const Offset(0, 0),
-                      blurRadius: 3,
+  Widget _buildMenuItem(FloatingMenuItem item, int i) {
+    return AnimatedBuilder(
+      animation: _expandAnimation,
+      builder: (context, child) {
+        return Positioned(
+          right: widget.menuItemPos.$1,
+          bottom: widget.menuItemPos.$2 
+            + MediaQuery.of(context).padding.bottom 
+            + _expandAnimation.value * widget.mainButtonSize * 1.2 
+            + _expandAnimation.value * widget.mainButtonSize * (i),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Label
+              if (item.title != null) 
+                SizeTransition(
+                  sizeFactor: _expandAnimation,
+                  axis: Axis.horizontal,
+                  child: Padding(
+                    padding: const EdgeInsets.all(3.0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.systemBackground,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: CupertinoColors.black.withOpacity(0.2),
+                            offset: const Offset(0, 0),
+                            blurRadius: 3,
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        item.title!,
+                        overflow: TextOverflow.clip,
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w400,
+                          fontSize: 18,
+                        ),
+                      ),
                     ),
-                  ],
+                  ),
                 ),
-                child: Text(
-                  item.title!,
-                  overflow: TextOverflow.clip,
-                  textAlign: TextAlign.end,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 18,
+          
+              const SizedBox(width: 8),
+          
+              // Button
+              GestureDetector(
+                onTap: () {
+                  _toggleMenu();
+                  item.onTap();
+                },
+                child: Container(
+                  width: widget.menuItemSize,
+                  height: widget.menuItemSize,
+                  decoration: BoxDecoration(
+                    color: item.color,
+                    borderRadius: BorderRadius.circular(widget.menuItemSize / 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: CupertinoColors.black.withOpacity(0.2),
+                        offset: const Offset(0, 3),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    item.icon,
+                    color: item.color.isLightColor() ? Colors.black : Colors.white,
+                    size: widget.menuItemSize / 2,
                   ),
                 ),
               ),
-            )
+            ],
           ),
-
-        const SizedBox(width: 8),
-
-        // Button
-        GestureDetector(
-          onTap: () {
-            _toggleMenu();
-            item.onTap();
-          },
-          child: Container(
-            width: widget.size * 0.8,
-            height: widget.size * 0.8,
-            decoration: BoxDecoration(
-              color: item.color,
-              borderRadius: BorderRadius.circular(widget.size * 0.4),
-              boxShadow: [
-                BoxShadow(
-                  color: CupertinoColors.black.withOpacity(0.2),
-                  offset: const Offset(0, 3),
-                  blurRadius: 6,
-                ),
-              ],
-            ),
-            child: Icon(
-              item.icon,
-              color: item.color.isLightColor() ? Colors.black : Colors.white,
-              size: widget.size * 0.4,
-            ),
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -172,6 +190,8 @@ class _FloatingButtonState extends State<FloatingButton> with SingleTickerProvid
             ),
           ),
         ),
+
+        ...widget.menuItems.mapIndexed(_buildMenuItem).toList(),
         
         // Floating button and menu
         Positioned(
@@ -181,26 +201,16 @@ class _FloatingButtonState extends State<FloatingButton> with SingleTickerProvid
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              SizeTransition(
-                sizeFactor: _expandAnimation,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: widget.menuItems.map((item) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: _buildMenuItem(item),
-                  )).toList(),
-                ),
-              ),
               const SizedBox(height: 8),
               // Main Button
               GestureDetector(
                 onTap: _toggleMenu,
                 child: Container(
-                  width: widget.size,
-                  height: widget.size,
+                  width: widget.mainButtonSize,
+                  height: widget.mainButtonSize,
                   decoration: BoxDecoration(
                     color: widget.backgroundColor,
-                    borderRadius: BorderRadius.circular(widget.size / 2),
+                    borderRadius: BorderRadius.circular(widget.mainButtonSize / 2),
                     boxShadow: [
                       BoxShadow(
                         color: CupertinoColors.black.withOpacity(0.2),
