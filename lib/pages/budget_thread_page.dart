@@ -1,4 +1,5 @@
 import 'package:calendar/components/budget_entry_cell.dart';
+import 'package:calendar/components/floating_button.dart';
 import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/pages/add_budget_entry_page.dart';
 import 'package:calendar/screens/budget_entry_page.dart';
@@ -41,41 +42,62 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(budgetEntriesProviderProvider(widget.thread?.id));
     return SafeArea(
-      child: CustomScrollView(
-        slivers: [
-          CupertinoSliverRefreshControl(
-            onRefresh: () => 
-              ref.refresh(budgetEntriesProviderProvider(widget.thread?.id).future)
-          ),
-          SliverToBoxAdapter(
-            child: switch(state) {
-              AsyncData(:final value) => 
-                CupertinoListSection(
-                  children: [...value.map((entry) {
-                    entry.thread.value = widget.thread;
-                    return Builder(
-                      builder: (context) {
-                        return BudgetEntryCell(
-                          onTap: () {
-                            openPageSide(
-                              context, 
-                              BudgetEntryPage(entry: entry),
+      child: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              CupertinoSliverRefreshControl(
+                onRefresh: () => 
+                  ref.refresh(budgetEntriesProviderProvider(widget.thread?.id).future)
+              ),
+              SliverToBoxAdapter(
+                child: switch(state) {
+                  AsyncData(:final value) => 
+                    CupertinoListSection(
+                      children: [...value.map((entry) {
+                        entry.thread.value = widget.thread;
+                        return Builder(
+                          builder: (context) {
+                            return BudgetEntryCell(
+                              onTap: () {
+                                openPageSide(
+                                  context, 
+                                  BudgetEntryPage(entry: entry),
+                                );
+                              },
+                              entry: entry,
                             );
                           },
-                          entry: entry,
                         );
-                      },
-                    );
-                  }).toList(),
-                  // BudgetEntryAddCell(onTap: () => visibilityController.setVisibility(true)), 
-                  BudgetEntryAddCell(onTap: () => _showAddEntryPopup()), 
-                ]
+                      }).toList(),
+                      // BudgetEntryAddCell(onTap: () => visibilityController.setVisibility(true)), 
+                      BudgetEntryAddCell(onTap: () => _showAddEntryPopup()), 
+                    ]
+                  ),
+                  AsyncLoading() => const Center(child: CircularProgressIndicator()),
+                  _ => const SizedBox(),
+                }
               ),
-              AsyncLoading() => const Center(child: CircularProgressIndicator()),
-              _ => const SizedBox(),
-            }
+            ],
           ),
-        ],
+          FloatingButton(
+            menuItems: [
+              FloatingMenuItem( 
+                icon: Icons.delete, 
+                color: CupertinoColors.destructiveRed,
+                onTap: () {
+
+                }
+              ),
+              FloatingMenuItem( 
+                icon: Icons.star, 
+                onTap: () {
+
+                }
+              ),
+            ]
+          )
+        ]
       ),
     );
   }
