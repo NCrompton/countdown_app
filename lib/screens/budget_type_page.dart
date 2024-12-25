@@ -48,9 +48,9 @@ class _BudgetTypePageState extends ConsumerState<BudgetTypePage> {
         middle: Text("Budget Type"),
       ),
       child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ListView(
           children: [
+            // header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Column(
@@ -73,6 +73,8 @@ class _BudgetTypePageState extends ConsumerState<BudgetTypePage> {
                 ]
               ),
             ),
+        
+            // Portion graph
             Container(
               padding: const EdgeInsets.all(8),
               decoration: const BoxDecoration(
@@ -102,6 +104,8 @@ class _BudgetTypePageState extends ConsumerState<BudgetTypePage> {
                 ] 
               ),
             ),
+        
+            // List 
             Expanded(
               child: switch(state) {
                   AsyncData(:final value) => value.isEmpty 
