@@ -9,6 +9,7 @@ part 'supabase_service.g.dart';
 @Riverpod(keepAlive: true)
 class SupabaseService extends _$SupabaseService{
   
+  //TODO: change to keepAlive ref
   static SupabaseService instance = SupabaseService();
   Supabase? supabase;
   Session? get session => supabase?.client.auth.currentSession;
@@ -19,7 +20,7 @@ class SupabaseService extends _$SupabaseService{
     return initSupabase();
   }
 
-  Future<SupabaseService> initSupabase() async {
+  static Future<SupabaseService> initSupabase() async {
     instance.supabase = instance.supabase ?? await Supabase.initialize(
       url: SUPABASE_URL,
       anonKey: SUPABASE_API_KEY,

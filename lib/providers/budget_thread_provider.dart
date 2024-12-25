@@ -23,6 +23,8 @@ class BudgetThreadProvider extends _$BudgetThreadProvider {
 
       db = await BudgetDatabase.getInstance();
       backup = await ref.read(supabaseServiceProvider.future);
+
+      ref.keepAlive();
       return _fetchThreads();
     } 
 

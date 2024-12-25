@@ -5,6 +5,7 @@ import 'package:calendar/pages/add_budget_entry_page.dart';
 import 'package:calendar/screens/budget_entry_page.dart';
 import 'package:calendar/providers/budget_entry_provider.dart';
 import 'package:calendar/utils/route_transition.dart';
+import 'package:calendar/utils/storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,6 +23,7 @@ class BudgetThreadPage extends ConsumerStatefulWidget {
 
 class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
   final ValueNotifier<bool> _isByMonth = ValueNotifier(true);
+  final ValueNotifier<bool> _isTargetThread = ValueNotifier(false);
   DateFormat get formatter => _isByMonth.value ? DateFormat("MMM y") : DateFormat("dd MMM y");
 
   void _showAddEntryPopup() {
@@ -43,6 +45,20 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
     );
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _setIsTargetThread();
+  }
+
+  void _updateTargetThread() async {
+    (await LocalStorageManager.instance()).setTargetBudgetThread(_isTargetThread.value ? null : widget.thread!.id);
+    _isTargetThread.value = !_isTargetThread.value;
+  }
+
+  Future<void> _setIsTargetThread() async =>
+    _isTargetThread.value = (await LocalStorageManager.instance()).getTargetBudgetThread() == widget.thread?.id;
+
   ThreadDisplayStruct _renderDisplayStruct(List<BudgetEntry> entryList) {
     Map<String, List<BudgetEntry>> struct = <String, List<BudgetEntry>>{};
     for (var e in entryList) {
@@ -54,6 +70,48 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
       }
     }
     return struct;
+  }
+
+  Widget _buildEntryList(List<BudgetEntry> entries) {
+    return Container(
+      color: CupertinoColors.systemGroupedBackground,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _isByMonth,
+        builder: (context, isByMonth, child) {
+          return CupertinoListSection(
+            topMargin: 4,
+            hasLeading: true,
+            margin: const EdgeInsets.only(bottom: 0),
+            backgroundColor: CupertinoColors.systemBackground,
+            header: BudgetEntryAddCell(onTap: _showAddEntryPopup),
+            children: [
+              ..._renderDisplayStruct(entries).entries.map((e) {
+                return CupertinoListSection(
+                  header: Text(e.key),
+                  children: [...e.value.map((entry) {
+                    entry.thread.value = widget.thread;
+                    return Builder(
+                      builder: (context) {
+                        return BudgetEntryCell(
+                          onTap: () {
+                            openPageSide(
+                              context, 
+                              BudgetEntryPage(entry: entry),
+                            );
+                          },
+                          entry: entry,
+                        );
+                      },
+                    );
+                  }).toList()]
+                );
+              }).toList(),
+            ]
+          );
+        }
+      ),
+    );
   }
 
   @override
@@ -70,78 +128,40 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
               ),
               SliverToBoxAdapter(
                 child: switch(state) {
-                  AsyncData(:final value) => 
-                    Container(
-                      color: CupertinoColors.systemGroupedBackground,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: ValueListenableBuilder<bool>(
-                        valueListenable: _isByMonth,
-                        builder: (context, isByMonth, child) {
-                          return CupertinoListSection(
-                            topMargin: 4,
-                            hasLeading: true,
-                            margin: const EdgeInsets.only(bottom: 0),
-                            backgroundColor: CupertinoColors.systemBackground,
-                            header: BudgetEntryAddCell(onTap: () => _showAddEntryPopup()),
-                            children: [
-                              ..._renderDisplayStruct(value).entries.map((e) {
-                                return CupertinoListSection(
-                                  header: Text(e.key),
-                                  children: [...e.value.map((entry) {
-                                    entry.thread.value = widget.thread;
-                                    return Builder(
-                                      builder: (context) {
-                                        return BudgetEntryCell(
-                                          onTap: () {
-                                            openPageSide(
-                                              context, 
-                                              BudgetEntryPage(entry: entry),
-                                            );
-                                          },
-                                          entry: entry,
-                                        );
-                                      },
-                                    );
-                                  }).toList()]
-                                );
-                              }).toList(),
-                              // BudgetEntryAddCell(onTap: () => visibilityController.setVisibility(true)), 
-                            ]
-                          );
-                        }
-                      ),
-                    ),
+                  AsyncData(:final value) => _buildEntryList(value),
                   AsyncLoading() => const Center(child: CircularProgressIndicator()),
                   _ => const SizedBox(),
                 }
               ),
             ],
           ),
-          FloatingMenu(
-            menuItems: [
-              if (widget.thread != null)
-                ...[FloatingMenuItem( 
-                  icon: Icons.delete, 
-                  color: CupertinoColors.destructiveRed,
-                  onTap: () {
-
-                  }
-                ),
-                FloatingMenuItem( 
-                  icon: Icons.star, 
-                  onTap: () {
-
-                  }
-                )],
-              FloatingMenuItem( 
-                icon: Icons.swap_calls, 
-                onTap: () {
-                  setState(() {
-                    _isByMonth.value = !_isByMonth.value;
-                  });
-                }
-              ),
-            ]
+          ValueListenableBuilder<bool>(
+            valueListenable: _isTargetThread,
+            builder: (context, isTargetThread, child) {
+              return FloatingMenu(
+                menuItems: [
+                  if (widget.thread != null)
+                    ...[
+                      FloatingMenuItem( 
+                        icon: Icons.delete, 
+                        color: CupertinoColors.destructiveRed,
+                        onTap: () {
+                          
+                        }
+                      ),
+                      FloatingMenuItem( 
+                        icon: isTargetThread ? Icons.close : Icons.star, 
+                        onTap: _updateTargetThread,
+                      )
+                    ],
+                  FloatingMenuItem( 
+                    icon: Icons.swap_calls, 
+                    onTap: () =>
+                      setState(() => _isByMonth.value = !_isByMonth.value)
+                  ),
+                ]
+              );
+            }
           )
         ]
       ),

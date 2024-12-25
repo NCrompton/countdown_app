@@ -3,6 +3,7 @@ import 'package:calendar/providers/budget_thread_provider.dart';
 import 'package:calendar/services/budget_database.dart';
 import 'package:calendar/services/exchange_service.dart';
 import 'package:calendar/services/supabase_service.dart';
+import 'package:calendar/utils/logger.dart';
 import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'budget_entry_provider.g.dart';
@@ -35,6 +36,9 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
 
     db = await BudgetDatabase.getInstance();
     backup = await ref.watch(supabaseServiceProvider.future);
+    
+    ref.keepAlive();
+    ref.onDispose(() => Log().d("provider disposed"));
     return await _fetchAllEntries();
   }
 
@@ -82,7 +86,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     bool success = true;
     state = await AsyncValue.guard(() async {
       final thread = entry.thread.value;
-      // TODO: delete
+      // TODO: delete logic
       if (thread != null) {
         await db.saveEntryToThread(thread);
       }

@@ -33,6 +33,7 @@ class ExchangeService extends _$ExchangeService {
     return model;
   }
 
+  //TODO: change to keepAlive ref
   @override
   Future<ExchangeModel> build() async {
     return _fetchExchangeRate();

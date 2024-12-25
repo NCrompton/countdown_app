@@ -9,6 +9,7 @@ class BudgetDatabase {
 
   BudgetDatabase({required Isar isar}):_isar = isar;
 
+  //TODO: change to keepAlive ref
   static Future<BudgetDatabase> getInstance() async {
     if (_instance == null) {
       final dir = await getApplicationDocumentsDirectory();

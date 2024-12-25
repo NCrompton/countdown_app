@@ -1,5 +1,3 @@
-const targetDateConfig = "targetDateConfig";
-const dateListConfig = "dateListConfig";
 const String appGroupId = 'group.masonzen.countdown';
 const String iOSWidgetNameCalendar = 'com.masonzen.calendar.Countdown';
 const String androidWidgetNameCalendar = 'CountdownWidget'; 
