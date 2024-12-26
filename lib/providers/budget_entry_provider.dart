@@ -1,5 +1,4 @@
 import 'package:calendar/model/budget_schema.dart';
-import 'package:calendar/providers/budget_thread_provider.dart';
 import 'package:calendar/services/budget_database.dart';
 import 'package:calendar/services/exchange_service.dart';
 import 'package:calendar/services/supabase_service.dart';
@@ -8,6 +7,10 @@ import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'budget_entry_provider.g.dart';
 
+// TODO: now the state update twice everytime it is updated: {listenToDB, _fetchAllEntry}
+// TODO: late initialization of db when reading function instead of watching
+// TODO: as state above, function should only usable when there is a state, as such, operation on the db should be split out
+// TODO: the function should act on the state, instead of just refetching the state
 @riverpod
 class BudgetEntriesProvider extends _$BudgetEntriesProvider {
 
@@ -15,19 +18,12 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
   late SupabaseService backup;
 
   Future<List<BudgetEntry>> _fetchAllEntries() async {
-    if (threadId == null) return db.getAllEntries();
-    return db.getEntriesFromThread(threadId!);
+    return db.getEntriesFromThread(threadId);
   }
 
   // TODO: fix
   Future<void> resetAllBudgets(Id? id) async {
-      // ref.invalidate(budgetEntriesProviderProvider);
-      ref.invalidate(budgetThreadProviderProvider);
-      if (threadId != null) {
-        ref.invalidate(budgetEntriesProviderProvider(null));
-      } else if (id != null){
-        ref.invalidate(budgetEntriesProviderProvider(id));
-      }
+    // ref.invalidate(budgetThreadProviderProvider);
   }
 
   @override
@@ -36,10 +32,20 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
 
     db = await BudgetDatabase.getInstance();
     backup = await ref.watch(supabaseServiceProvider.future);
+    await _listenToDB();
     
     ref.keepAlive();
     ref.onDispose(() => Log().d("provider disposed"));
+
     return await _fetchAllEntries();
+  }
+
+  Future<void> _listenToDB() async {
+    db.entriesQuery(threadId)
+      .watch(fireImmediately: true)
+      .listen((_) async { // cannot use callback var, since it is not link its thread
+        state = AsyncData(await _fetchAllEntries());
+      });
   }
 
   Future<bool> createEntry(BudgetEntry entry) async {

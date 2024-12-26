@@ -1,8 +1,9 @@
 import 'package:calendar/model/budget_schema.dart';
-import 'package:calendar/utils/budget_util.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
+// TODO: use riverpod provide the service, which the service will operate on db and stored value
+// TODO: provider should only work on state, service should work on data
 class BudgetDatabase {
   final Isar _isar;
   static BudgetDatabase? _instance;
@@ -33,8 +34,15 @@ extension BudgetThreadDatabase on BudgetDatabase {
   }
 
   Future<List<BudgetThread>> getAllThreads() async {
-    return await _isar.budgetThreads.where().filter().enabledEqualTo(true).findAll();
+    return await threadQuery()
+      .findAll();
   }
+
+  Query<BudgetThread> threadQuery() => _isar.budgetThreads
+    .where()
+    .filter()
+    .enabledEqualTo(true)
+    .build();
 
   Future<Id> createThread(BudgetThread thread) async {
     return await _isar.writeTxn(() async {
@@ -59,6 +67,13 @@ extension BudgetThreadDatabase on BudgetDatabase {
       await thread.budgets.save();
     });
   }
+
+  Future<void> saveEntry (BudgetEntry entry) async {
+    return await _isar.writeTxn(() async {
+      await entry.thread.save();
+      await entry.thread.value?.budgets.save();
+    });
+  }
 }
 
 extension BudgetEntryDatabase on BudgetDatabase {
@@ -66,13 +81,40 @@ extension BudgetEntryDatabase on BudgetDatabase {
     return _isar.budgetEntrys.get(id);
   }
 
-  Future<List<BudgetEntry>> getEntriesFromThread(Id threadId) async {
-    return (await _isar.budgetThreads.filter().idEqualTo(threadId).findFirst())!.budgets.where((i) => i.enabled).toList()
-      ..sortByCreateTimeAsc();
+  Future<List<BudgetEntry>> getEntriesFromThread(Id? threadId) async {
+    return await entriesQuery(threadId)
+      .findAll()
+      ..forEach(loadThread);
+    // return await _isar.budgetEntrys
+    //     .filter()
+    //     .enabledEqualTo(true)
+    //     .thread((t) => t.idEqualTo(threadId))
+    //     .findAll()
+    //   ..toList()
+    //   ..forEach(loadThread)
+    //   ..sortByCreateTimeAsc();
   }
 
   Future<List<BudgetEntry>> getAllEntries() async {
-    return _isar.budgetEntrys.where().filter().enabledEqualTo(true).sortByEntryTime().findAll();
+    return await entriesQuery(null)
+      .findAll()
+      ..forEach(loadThread);
+    // return await _isar.budgetEntrys
+    //     .filter()
+    //     .enabledEqualTo(true)
+    //     .sortByEntryTime()
+    //     .findAll()
+    //   ..forEach(loadThread);
+  }
+
+  Query<BudgetEntry> entriesQuery(Id? threadId) {
+    var query = _isar.budgetEntrys
+      .filter()
+      .enabledEqualTo(true);
+      if (threadId != null) query = query.thread((t) => t.idEqualTo(threadId));
+    return query
+      .sortByEntryTime()
+      .build();
   }
 
   Future<Id> createEntry(BudgetEntry entry) async {
@@ -103,6 +145,12 @@ extension BudgetEntryDatabase on BudgetDatabase {
   bool updateEntrySync(BudgetEntry entry) {
     return _isar.writeTxnSync(() {
       return _isar.budgetEntrys.putSync(entry) > 0;
+    });
+  }
+
+  void loadThread(BudgetEntry entry) {
+    return _isar.writeTxnSync(() {
+        entry.thread.loadSync();
     });
   }
 }

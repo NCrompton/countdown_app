@@ -6,6 +6,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'budget_thread_provider.g.dart';
 
+// TODO: now the state update twice everytime it is updated: {listenToDB, _fetchThreads}
+// TODO: prevent calling late initialization of var 
+// TODO: the function should act on the state, instead of just refetching the state
 @riverpod
 class BudgetThreadProvider extends _$BudgetThreadProvider {
 
@@ -23,10 +26,18 @@ class BudgetThreadProvider extends _$BudgetThreadProvider {
 
       db = await BudgetDatabase.getInstance();
       backup = await ref.read(supabaseServiceProvider.future);
+      await _listenToDB();
 
       ref.keepAlive();
       return _fetchThreads();
     } 
+
+    Future<void> _listenToDB() async {
+      db.threadQuery()
+        .watch()
+        .listen((threads) async => 
+          state = AsyncData(threads));
+    }
 
     Future<void> addBudgetThread(BudgetThread thread) async {
       state = const AsyncValue.loading();

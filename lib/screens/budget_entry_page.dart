@@ -3,6 +3,7 @@ import 'package:calendar/controllers/input_controller.dart';
 import 'package:calendar/layout/floating_bottom_drawer.dart';
 import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/providers/budget_entry_provider.dart';
+import 'package:calendar/providers/budget_thread_provider.dart';
 import 'package:calendar/utils/const.dart';
 import 'package:calendar/utils/date_util.dart';
 import 'package:flutter/cupertino.dart';
@@ -28,7 +29,9 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
   InputController<Currency> _currencyController = InputController(Currency.hkd);
   InputController<DateTime> _createDateController = InputController(DateTime.now());
   InputController<BudgetEntryType> _typeController = InputController(BudgetEntryType.defaultType());
+  InputController<BudgetThread?> _threadController = InputController(null);
   List<BudgetEntryType>? typeList;
+  List<BudgetThread?>? threadList;
   late BudgetEntry newEntry;
 
   @override
@@ -39,14 +42,12 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
     _currencyController = InputController(widget.entry.price.currency);    
     _typeController = InputController(typeList?[widget.entry.entryType] ?? BudgetEntryType.defaultType());
     _createDateController = InputController(widget.entry.entryTime);
+    _threadController = InputController(widget.thread);
 
     newEntry = BudgetEntry.copy(widget.entry);
   }
 
   Widget _buildTypeInputWidget(BuildContext context) {
-    // return PickerWrapper(
-    //   text: _typeController.value.typeName, 
-    //   picker: 
       return CupertinoPicker(
         magnification: 1.22,
         squeeze: 1.2,
@@ -58,7 +59,21 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
         children: typeList!.map((type) => Center(
           child: Text(type.typeName),
         )).toList(),
-      // ),
+    );
+  }
+  
+  Widget _buildThreadInputWidget(BuildContext context) {
+      return CupertinoPicker(
+        magnification: 1.22,
+        squeeze: 1.2,
+        useMagnifier: true,
+        itemExtent: 32.0,
+        onSelectedItemChanged: (int selectedItem) {
+          _threadController.set(threadList![selectedItem]);
+        },
+        children: threadList!.map((thread) => Center(
+          child: Text(thread?.threadName ?? "🚫"),
+        )).toList(),
     );
   }
 
@@ -67,6 +82,9 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
       listenable: _nameController, 
       child: child,
       builder: (context, c) =>
+      ListenableBuilder(
+        listenable: _threadController,
+        builder: (context, _) =>
         ListenableBuilder(
           listenable: _createDateController,
           builder: (context, _) => 
@@ -83,6 +101,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
             )
           )
         )
+      )
     );
   }
 
@@ -92,7 +111,8 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
       ..entryTime = _createDateController.value
       ..entryType = _typeController.value.id
       ..price.value = _priceController.value
-      ..price.currency = _currencyController.value;
+      ..price.currency = _currencyController.value
+      ..thread.value = _threadController.value;
 
     return ChangedValuePreview(
       targets: [
@@ -101,6 +121,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
         ChangedValue(name: "Currency", oldValue: widget.entry.price.currency.displayName, newValue: newEntry.price.currency.displayName),
         ChangedValue(name: "Create Time", oldValue: widget.entry.entryTime.formatToDisplay(), newValue: newEntry.entryTime.formatToDisplay()),
         ChangedValue(name: "Type", oldValue: typeList![widget.entry.entryType].typeName, newValue: typeList![newEntry.entryType].typeName),
+        ChangedValue(name: "Thread", oldValue: widget.thread?.threadName ?? "", newValue: newEntry.thread.value?.threadName ?? ""),
       ],
       onConfirm:() async {
         await _updateEntry(newEntry);
@@ -151,15 +172,20 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
   }
 
   /// Only react if provider state changes
-  void initTypeList() async {
+  void initValue() async {
     typeList = await ref.watch(budgetEntryTypeProviderProvider.future);
     _typeController.set(typeList![widget.entry.entryType]);
+    
+    threadList = [null, ...(await ref.watch(budgetThreadProviderProvider.future))];
   }
 
+/// TODO: consider wrapping listenable to only its edit row widget
+/// TODO: _buildPreview entry on clicking update button instead of on drawerchild
+/// TODO: consider using cupertino pop up instead
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(budgetEntriesProviderProvider(widget.thread?.id));
-    initTypeList();
+    initValue(); // when ref update, this widget will be rebuilt
     return CupertinoPageScaffold(
       resizeToAvoidBottomInset: false,
       navigationBar: CupertinoNavigationBar(
@@ -183,6 +209,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
                         EntryAttributeRow<Currency>(attributeName: "Currency", attributeValueString: _currencyController.value.displayName.toUpperCase(), inputController: _currencyController, enumList:Currency.values),
                         EntryAttributeRow<DateTime>(attributeName: "Create Time", attributeValueString: _createDateController.value.formatToDisplay(), inputController: _createDateController),
                         EntryAttributeRow<BudgetEntryType>(attributeName: "Type", attributeValueString: _typeController.value.typeName, inputController: _typeController, customInput: _buildTypeInputWidget(context)),
+                        EntryAttributeRow<BudgetThread?>(attributeName: "Thread", attributeValueString: _threadController.value?.threadName, inputController: _threadController, customInput: _buildThreadInputWidget(context)),
                       ],
                     ),
                   ),

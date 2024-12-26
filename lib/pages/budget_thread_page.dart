@@ -90,7 +90,6 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
                 return CupertinoListSection(
                   header: Text(e.key),
                   children: [...e.value.map((entry) {
-                    entry.thread.value = widget.thread;
                     return Builder(
                       builder: (context) {
                         return BudgetEntryCell(
