@@ -1,4 +1,4 @@
-import 'package:calendar/screens/home_page.dart';
+import 'package:calendar/screens/front_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -18,7 +18,7 @@ class App extends StatelessWidget {
         primaryColor: CupertinoColors.activeBlue,
         brightness: Brightness.light,
       ),
-      home: HomePage(title: 'Countdown Calendar'),
+      home: FrontPage(),
       debugShowCheckedModeBanner: false,
     );
   }

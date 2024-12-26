@@ -4,12 +4,12 @@ import 'package:calendar/controllers/view_provider.dart';
 import 'package:calendar/layout/floating_bottom_drawer.dart';
 import 'package:calendar/providers/date_provider.dart';
 import 'package:calendar/pages/add_date.dart';
+import 'package:calendar/screens/date_calculation_page.dart';
 import 'package:calendar/utils/route_transition.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:calendar/screens/countdown_detail.dart';
-import 'package:home_widget/home_widget.dart';
 
 final provider= asyncDateStateProvider;
 
@@ -20,56 +20,16 @@ class DateListPage extends ConsumerStatefulWidget {
 }
 
 class _DateListPageState extends ConsumerState<DateListPage> with SingleTickerProviderStateMixin {
-  bool _isPanelVisible = false;
-
   final _dateController = DateCalculatorController(DateTime.now(), 0);
   final _visibilityController = VisibilityController(false);
-  double panelHeight = 0;
 
-  @override
-  void initState() {
-    super.initState();
-
-    HomeWidget.getInstalledWidgets().then((v) {
-      print("list of widget: $v");
-    });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  void _togglePanel() {
-    setState(() {
-      _isPanelVisible = !_isPanelVisible;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final dateState = ref.watch(asyncDateStateProvider);
-    final size = MediaQuery.of(context).size;
-    panelHeight = size.height * 0.8; // 80% of screen he
-
-    return  ListenableBuilder(listenable: _dateController, builder: (BuildContext context, Widget? child){ 
-              return ListenableBuilder(listenable: _visibilityController, builder: (BuildContext context, Widget? child){ 
-                return GestureDetector(
-                  onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-                  child: CupertinoPageScaffold(
-                    resizeToAvoidBottomInset: false,
-                    navigationBar: CupertinoNavigationBar(
-                      middle: const Text('Target Date List'),
-                      trailing: IconButton(
-                        onPressed: _visibilityController.toggleVisibility, 
-                        icon: Icon(_visibilityController.visible ? Icons.close : Icons.add)
-                      ),
-                    ),
-                    child: _buildBody(dateState),
-                  )
-                );
-              });
-            }); 
+  void _showDateSelection(BuildContext context) async {
+    final _ = await Navigator.of(context).push(
+      CupertinoPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => const DateCalculationPage(),
+      ),
+    );
   }
 
   Widget _buildBody(AsyncValue<DateState> dateState) {
@@ -110,12 +70,56 @@ class _DateListPageState extends ConsumerState<DateListPage> with SingleTickerPr
                 ],
               ),
             ),
+            Positioned(
+              right: 16,
+              bottom: 16,
+              child: GestureDetector(
+                onTap: () => _showDateSelection(context),
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: CupertinoColors.activeBlue,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: const Icon(
+                    CupertinoIcons.calendar_badge_plus,
+                    color: CupertinoColors.white,
+                  ),
+                ),
+              ),
+            ),
             FloatingBottomDrawer(
               visibilityController: _visibilityController,
+              heightPortion: 0.5,
               child: AddDatePage(dismiss: () => _visibilityController.setVisibility(false)), 
             ),
           ],
         ),
       );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dateState = ref.watch(asyncDateStateProvider);
+
+    return  ListenableBuilder(listenable: _dateController, builder: (BuildContext context, Widget? child){ 
+              return ListenableBuilder(listenable: _visibilityController, builder: (BuildContext context, Widget? child){ 
+                return GestureDetector(
+                  onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+                  child: CupertinoPageScaffold(
+                    resizeToAvoidBottomInset: false,
+                    navigationBar: CupertinoNavigationBar(
+                      middle: const Text('Target Date List'),
+                      trailing: IconButton(
+                        onPressed: _visibilityController.toggleVisibility, 
+                        icon: Icon(_visibilityController.visible ? Icons.close : Icons.add)
+                      ),
+                    ),
+                    child: _buildBody(dateState),
+                  )
+                );
+              });
+            }); 
   }
 }
