@@ -19,7 +19,7 @@ class BudgetThreadList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final threadsProvider = ref.watch(budgetThreadProviderProvider);
-
+    
     return FloatingBottomDrawerScaffold(
       title: "Budget Threads",
       heightPortion: 0.7,
@@ -52,6 +52,7 @@ class BudgetThreadList extends ConsumerWidget {
                             return Builder(
                               builder: (context) {
                                 return BudgetThreadCell(
+                                  isTarget: thread.isTarget,
                                   onTap: () =>
                                     openPageSide(
                                       context, 
@@ -81,14 +82,22 @@ class BudgetThreadList extends ConsumerWidget {
 class BudgetThreadCell extends StatelessWidget {
   final BudgetThread thread;
   final GestureTapCallback? onTap;
+  final bool isTarget;
 
-  const BudgetThreadCell({super.key, required this.thread, this.onTap});
+  const BudgetThreadCell({
+    super.key, 
+    required this.thread, 
+    this.onTap, 
+    bool? isTarget
+  }):
+    isTarget = isTarget ?? false;
 
   @override
   Widget build(BuildContext context) {
     return ListCell(
       onTap: onTap,
-      leftWidget: Text(thread.threadName), 
+      leftWidget: Text(thread.threadName),
+      rightWidget: isTarget ? const Icon(Icons.star) : null, 
       subLeftWidget: Text( "${thread.budgets.firstOrNull?.entryTime.formatToShortDisplay()} - ${thread.budgets.lastOrNull?.entryTime.formatToShortDisplay()}"),
     );
   }

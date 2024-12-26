@@ -5,12 +5,13 @@ import 'package:flutter/material.dart';
 class FloatingMenuItem {
   final String? title;
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Color color;
+  bool get enable => onTap != null;
 
   const FloatingMenuItem({
     required this.icon,
-    required this.onTap,
+    this.onTap,
     this.title,
     Color? color,
   }):
@@ -142,13 +143,13 @@ class _FloatingMenuState extends State<FloatingMenu> with SingleTickerProviderSt
               GestureDetector(
                 onTap: () {
                   _toggleMenu();
-                  item.onTap();
+                  if (item.enable) item.onTap!();
                 },
                 child: Container(
                   width: widget.menuItemSize,
                   height: widget.menuItemSize,
                   decoration: BoxDecoration(
-                    color: item.color,
+                    color: item.enable ? item.color : Colors.grey,
                     borderRadius: BorderRadius.circular(widget.menuItemSize / 2),
                     boxShadow: [
                       BoxShadow(
@@ -160,7 +161,9 @@ class _FloatingMenuState extends State<FloatingMenu> with SingleTickerProviderSt
                   ),
                   child: Icon(
                     item.icon,
-                    color: item.color.isLightColor() ? Colors.black : Colors.white,
+                    color: item.enable 
+                      ? item.color.isLightColor() ? Colors.black : Colors.white
+                      : Colors.white,
                     size: widget.menuItemSize / 2,
                   ),
                 ),

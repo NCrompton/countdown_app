@@ -1,6 +1,9 @@
 import 'package:calendar/model/budget_schema.dart';
+import 'package:calendar/providers/budget_entry_provider.dart';
 import 'package:calendar/services/budget_database.dart';
 import 'package:calendar/services/supabase_service.dart';
+import 'package:calendar/utils/storage.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -16,8 +19,7 @@ class BudgetThreadProvider extends _$BudgetThreadProvider {
     late SupabaseService backup;
 
     Future<List<BudgetThread>> _fetchThreads() async {
-      final threads = await db.getAllThreads();
-      return threads;
+      return await db.getAllThreads();
     }
 
     @override
@@ -28,8 +30,14 @@ class BudgetThreadProvider extends _$BudgetThreadProvider {
       backup = await ref.read(supabaseServiceProvider.future);
       await _listenToDB();
 
+      final targetThreadId = await ref.watch(targetThreadProvider.future);
+      final threads = await _fetchThreads();
+      for (var t in threads) {
+        t.isTarget = t.id == targetThreadId;
+      }
+
       ref.keepAlive();
-      return _fetchThreads();
+      return threads;
     } 
 
     Future<void> _listenToDB() async {
@@ -63,9 +71,14 @@ class BudgetThreadProvider extends _$BudgetThreadProvider {
       state = const AsyncValue.loading();
 
       state = await AsyncValue.guard(() async {
+        final entries = await ref.read(budgetEntriesProviderProvider(thread.id).future);
+        for (var e in entries) {
+          e.enabled = false;
+          await db.updateEntry(e);
+        }
         thread.enabled = false;
         await db.updateThread(thread);
-        // return state.value!..removeWhere((t) => t.id == threadId);
+        
         return _fetchThreads();
       });
 
@@ -83,4 +96,19 @@ class BudgetThreadProvider extends _$BudgetThreadProvider {
 
       await backup.deleteEntry(threadId);
     }
+}
+
+@riverpod
+class TargetThread extends _$TargetThread {
+  
+  @override
+  Future<Id?> build() async {
+    state = const AsyncLoading();
+    return (await LocalStorageManager.instance()).getTargetBudgetThread();
+  }
+
+  Future<void> updateTargetThread(Id? id) async {
+    (await LocalStorageManager.instance()).setTargetBudgetThread(id);
+    state = AsyncData(id);
+  }
 }

@@ -2,10 +2,10 @@ import 'package:calendar/components/budget_entry_cell.dart';
 import 'package:calendar/components/floating_menu.dart';
 import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/pages/add_budget_entry_page.dart';
+import 'package:calendar/providers/budget_thread_provider.dart';
 import 'package:calendar/screens/budget_entry_page.dart';
 import 'package:calendar/providers/budget_entry_provider.dart';
 import 'package:calendar/utils/route_transition.dart';
-import 'package:calendar/utils/storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,7 +23,6 @@ class BudgetThreadPage extends ConsumerStatefulWidget {
 
 class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
   final ValueNotifier<bool> _isByMonth = ValueNotifier(true);
-  final ValueNotifier<bool> _isTargetThread = ValueNotifier(false);
   DateFormat get formatter => _isByMonth.value ? DateFormat("MMM y") : DateFormat("dd MMM y");
 
   void _showAddEntryPopup() {
@@ -45,19 +44,11 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _setIsTargetThread();
-  }
-
   void _updateTargetThread() async {
-    (await LocalStorageManager.instance()).setTargetBudgetThread(_isTargetThread.value ? null : widget.thread!.id);
-    _isTargetThread.value = !_isTargetThread.value;
+    final targetThread = await ref.read(targetThreadProvider.future);
+    ref.read(targetThreadProvider.notifier)
+      .updateTargetThread(widget.thread?.id == targetThread ? null : widget.thread!.id);
   }
-
-  Future<void> _setIsTargetThread() async =>
-    _isTargetThread.value = (await LocalStorageManager.instance()).getTargetBudgetThread() == widget.thread?.id;
 
   ThreadDisplayStruct _renderDisplayStruct(List<BudgetEntry> entryList) {
     Map<String, List<BudgetEntry>> struct = <String, List<BudgetEntry>>{};
@@ -116,6 +107,7 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(budgetEntriesProviderProvider(widget.thread?.id));
+    final targetThread = ref.watch(targetThreadProvider);
     return SafeArea(
       child: Stack(
         children: [
@@ -134,33 +126,36 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
               ),
             ],
           ),
-          ValueListenableBuilder<bool>(
-            valueListenable: _isTargetThread,
-            builder: (context, isTargetThread, child) {
-              return FloatingMenu(
-                menuItems: [
-                  if (widget.thread != null)
-                    ...[
-                      FloatingMenuItem( 
-                        icon: Icons.delete, 
-                        color: CupertinoColors.destructiveRed,
-                        onTap: () {
-                          
-                        }
-                      ),
-                      FloatingMenuItem( 
-                        icon: isTargetThread ? Icons.close : Icons.star, 
-                        onTap: _updateTargetThread,
-                      )
-                    ],
+          FloatingMenu(
+            menuItems: [
+              if (widget.thread != null)
+                ...[
                   FloatingMenuItem( 
-                    icon: Icons.swap_calls, 
-                    onTap: () =>
-                      setState(() => _isByMonth.value = !_isByMonth.value)
+                    icon: Icons.delete, 
+                    color: CupertinoColors.destructiveRed,
+                    onTap: () {
+                      ref.read(budgetThreadProviderProvider.notifier).deleteBudgetThread(widget.thread!);
+                      Navigator.of(context).pop();
+                    },
                   ),
-                ]
-              );
-            }
+                  switch (targetThread) {
+                    AsyncData(:final value) => 
+                      FloatingMenuItem( 
+                        icon: widget.thread!.id == value ? Icons.close : Icons.star, 
+                        onTap: _updateTargetThread,
+                      ),
+                    _ =>
+                      const FloatingMenuItem( 
+                        icon: Icons.star, 
+                      ),
+                  }
+                ],
+              FloatingMenuItem( 
+                icon: Icons.swap_calls, 
+                onTap: () =>
+                  setState(() => _isByMonth.value = !_isByMonth.value)
+              ),
+            ]
           )
         ]
       ),

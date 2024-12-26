@@ -10,6 +10,9 @@ class BudgetThread {
   Id id = Isar.autoIncrement;
   String threadName;
   bool enabled = true;
+  
+  @ignore
+  bool isTarget = false;
 
   @Enumerated(EnumType.name)
   Currency preferredCurrency;
