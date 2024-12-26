@@ -139,7 +139,15 @@ class BudgetEntryType {
   factory BudgetEntryType.shoppingType() => _shoppingType;
 
   @ignore
-  IconData get icon => IconData(iconData, fontFamily: "MaterialIcons");
+  // IconData get icon => IconData(iconData, fontFamily: "MaterialIcons");
+  IconData get icon => switch(id) {
+    0 => Icons.accessibility,
+    1 => Icons.fastfood,
+    2 => Icons.train,
+    3 => Icons.tv,
+    4 => Icons.shopping_bag,
+    _ => Icons.accessibility,
+  };
 
   @ignore
   Color get color => Color(colorInt).withOpacity(1.0);
