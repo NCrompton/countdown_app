@@ -106,24 +106,22 @@ class _BudgetTypePageState extends ConsumerState<BudgetTypePage> {
             ),
         
             // List 
-            Expanded(
-              child: switch(state) {
-                  AsyncData(:final value) => value.isEmpty 
-                    ? const SizedBox()
-                    : Builder(
-                      builder: (context) {
-                        return CupertinoListSection(
-                            children: (value.where((v) => v.entryType == widget.type.id)
-                              .map((v) =>
-                                BudgetEntryCell(entry: v)
-                            ).toList()),
-                          );
-                      }
-                    ),
-                  AsyncLoading() => const CircularProgressIndicator(),
-                  _ => const Center(child: Text("Encountered error")),
-              }
-            )
+            switch(state) {
+                AsyncData(:final value) => value.isEmpty 
+                  ? const SizedBox()
+                  : Builder(
+                    builder: (context) {
+                      return CupertinoListSection(
+                          children: (value.where((v) => v.entryType == widget.type.id)
+                            .map((v) =>
+                              BudgetEntryCell(entry: v)
+                          ).toList()),
+                        );
+                    }
+                  ),
+                AsyncLoading() => const CircularProgressIndicator(),
+                _ => const Center(child: Text("Encountered error")),
+            }
           ],
         ),
       )
