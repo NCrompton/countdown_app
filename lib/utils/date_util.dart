@@ -1,4 +1,3 @@
-import 'package:calendar/model/duration_component.dart';
 import 'package:intl/intl.dart';
 
 const String dateFormat = "yyyy-MM-dd HH:mm:ss";
@@ -27,9 +26,9 @@ extension DateTimeExtension on DateTime {
     return formatter.format(this);
   }
 
-  DurationComponent standardDifferenceFromNow(DateTime other) {
-    return DurationComponent(duration: (isBefore(other))? 
-            other.difference(this):
-            difference(other));
+  Duration standardDifference(DateTime other) {
+    return (isBefore(other))
+      ? other.difference(this)
+      : difference(other);
   }
 }

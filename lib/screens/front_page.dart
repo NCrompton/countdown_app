@@ -1,6 +1,8 @@
+import 'package:calendar/providers/tab_provider.dart';
 import 'package:calendar/screens/budget_thread_list.dart';
 import 'package:calendar/screens/date_list.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 typedef FrontPageNavigation = (String, IconData, Widget);
 
@@ -10,14 +12,15 @@ const navigationItems = <FrontPageNavigation>[
   ("Budget", CupertinoIcons.money_dollar_circle, BudgetThreadList()),
 ];
 
-class FrontPage extends StatelessWidget {
+class FrontPage extends ConsumerWidget {
   const FrontPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return CupertinoTabScaffold(
       resizeToAvoidBottomInset: false,
       tabBar: CupertinoTabBar(
+        onTap: (i) => ref.read(tabProvider.notifier).state = i,
         items: navigationItems.map((e) => 
           BottomNavigationBarItem(
             icon: Icon(e.$2),
@@ -26,11 +29,10 @@ class FrontPage extends StatelessWidget {
         ).toList()
       ),
       tabBuilder: (context, index) {
-        return SafeArea(
-          child: IndexedStack( // allow preload all pages
-            index: index,
-            children: navigationItems.map((e) => e.$3).toList(),
-          )
+        return CupertinoTabView( // Use IndexStack for preload tab
+          builder: (context) {
+            return navigationItems[index].$3;
+          } 
         );
       }
     );

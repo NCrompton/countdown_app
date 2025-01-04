@@ -1,112 +1,92 @@
-import 'dart:async';
-
 import 'package:calendar/model/countdown_data.dart';
 import 'package:calendar/model/duration_component.dart';
-import 'package:calendar/providers/date_provider.dart';
 import 'package:calendar/utils/const.dart';
 import 'package:calendar/utils/date_util.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class DateListCell extends ConsumerStatefulWidget {
+typedef DateCellStarCallBack = void Function();
+typedef DateCellDeleteCallBack = void Function();
+class DateCell extends StatelessWidget {
   final CountdownData data;
   final bool isTarget;
   final GestureTapCallback? onTap;
-  // final Function(int) deleteCell;
+  final DateCellStarCallBack onStar;
+  final DateCellDeleteCallBack onDelete;
+  final ValueListenable<Duration> elapseController;
 
-  const DateListCell({super.key, required this.data, this.isTarget=false, this.onTap});
+  Color get intervalColor => data.date.isBefore(DateTime.now())
+    ? const Color(beforeCountdownColor)
+    : const Color(afterCountdownColor);
 
-  @override
-  ConsumerState<DateListCell> createState() => DateListCellState(); 
-}
+  const DateCell({
+    super.key, 
+    required this.data, 
+    required this.onStar,
+    required this.onDelete,
+    required this.elapseController,
+    this.isTarget=false, 
+    this.onTap,
+  });
 
-class DateListCellState extends ConsumerState<DateListCell> {
-  late Color intervalColor;
-  late DateTime date;
-  late DurationComponent interval;
-  late Timer _timer;
-
-
-  @override
-  void initState() {
-    super.initState();
-
-    date = widget.data.date;
-    interval = date.standardDifferenceFromNow(DateTime.now());
-    intervalColor = date.isBefore(DateTime.now())? const Color(beforeCountdownColor): const Color(afterCountdownColor);
-
-    // Align timer updates to occur at the start of each second
-    var now = DateTime.now();
-    var delay = Duration(seconds: 1) - Duration(milliseconds: now.millisecond);
-    
-    Future.delayed(delay, () {
-      if (mounted) {
-        // Start periodic timer aligned to seconds
-        _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-          if (mounted) {
-            setState(() {
-              interval = date.standardDifferenceFromNow(DateTime.now());
-            });
-          }
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _timer.cancel();
-  }
-
-  void _deleteCell() {
-    if (widget.isTarget) return;
-    ref.read(asyncDateStateProvider.notifier).removeDate(widget.data.id);
-  }
-
-  void _setAsTargetDate() {
-    ref.read(asyncDateStateProvider.notifier).setTargetDate(widget.data.id);
+  Widget _getTimeComponent(String suffix, String num) {
+    return Column(
+      children: [
+        Text(num, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: intervalColor),),
+        Text(suffix, style: const TextStyle(fontWeight: FontWeight.w200)),
+      ]
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final Duration origin = data.date.standardDifference(DateTime.now());
+
     return Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: widget.onTap,
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: widget.isTarget? const Icon(Icons.star) : const Icon(Icons.star_border),
-                  onPressed: _setAsTargetDate,
+                  icon: isTarget? const Icon(Icons.star) : const Icon(Icons.star_border),
+                  onPressed: onStar,
                 ),
                 Expanded(child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(widget.data.toString(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),),
+                        Text(data.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),),
                         IconButton(
-                          icon: widget.isTarget? const Icon(Icons.star) : const Icon(Icons.delete),
-                          onPressed: _deleteCell,
+                          icon: isTarget? const Icon(Icons.star) : const Icon(Icons.delete),
+                          onPressed: isTarget ? null : onDelete,
                         ),
                       ],
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        _getTimeComponent("Days", interval.days.toString()),
-                        _getTimeComponent("Hours", interval.hours.toString()),
-                        _getTimeComponent("Minutes", interval.minutes.toString()),
-                        _getTimeComponent("Seconds", interval.seconds.toString()),
-                      ],
+                    ValueListenableBuilder<Duration>(
+                      valueListenable: elapseController,
+                      builder: (context, elapse, child) {
+                        final i = data.date.isBefore(DateTime.now()) 
+                          ? DurationComponent(duration: origin - elapse)
+                          : DurationComponent(duration: origin + elapse);
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            _getTimeComponent("Days", i.days.toString()),
+                            _getTimeComponent("Hours", i.hours.toString()),
+                            _getTimeComponent("Minutes", i.minutes.toString()),
+                            _getTimeComponent("Seconds", i.seconds.toString()),
+                          ],
+                        );
+                      }
                     ),
                     Center(
-                      child: Text("Target: ${date.formatToStandard()}",
+                      child: Text("Target: ${data.date.formatToStandard()}",
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w200)),
                     )
                   ],
@@ -115,15 +95,6 @@ class DateListCellState extends ConsumerState<DateListCell> {
             ),
         )
       )
-    );
-  }
-
-  Widget _getTimeComponent(String suffix, String num) {
-    return Column(
-      children: [
-        Text(num, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: intervalColor),),
-        Text(suffix, style: const TextStyle(fontWeight: FontWeight.w200)),
-      ]
     );
   }
 }

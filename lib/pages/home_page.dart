@@ -62,7 +62,7 @@ class FrontPageInfoState extends ConsumerState<FrontPageInfo> {
 
       isTargetBeforeNow = targetDate!.date.isBefore(now);
       
-      diffDate = targetDate!.date.standardDifferenceFromNow(now);
+      diffDate = DurationComponent(duration: targetDate!.date.standardDifference(now));
       
       diffDateString =
           "${f.format(diffDate.hours)}:${f.format(diffDate.minutes)}:${(f.format(diffDate.seconds))}";
