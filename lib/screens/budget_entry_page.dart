@@ -120,8 +120,8 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
         ChangedValue(name: "Price", oldValue: widget.entry.price.value.toString(), newValue: newEntry.price.value.toString()),
         ChangedValue(name: "Currency", oldValue: widget.entry.price.currency.displayName, newValue: newEntry.price.currency.displayName),
         ChangedValue(name: "Create Time", oldValue: widget.entry.entryTime.formatToDisplay(), newValue: newEntry.entryTime.formatToDisplay()),
-        ChangedValue(name: "Type", oldValue: typeList![widget.entry.entryType].typeName, newValue: typeList![newEntry.entryType].typeName),
-        ChangedValue(name: "Thread", oldValue: widget.thread?.threadName ?? "", newValue: newEntry.thread.value?.threadName ?? ""),
+        ChangedValue(name: "Type", oldValue: typeList?[widget.entry.entryType].typeName, newValue: typeList?[newEntry.entryType].typeName),
+        ChangedValue(name: "Thread", oldValue: widget.thread?.threadName, newValue: newEntry.thread.value?.threadName),
       ],
       onConfirm:() async {
         await _updateEntry(newEntry);
@@ -262,9 +262,11 @@ class ChangedValue {
 
   const ChangedValue({
     required this.name,
-    required this.oldValue,
-    required this.newValue,
-  });
+    String? oldValue,
+    String? newValue,
+  }):
+    oldValue = oldValue ?? "",
+    newValue = newValue ?? "";
 }
 
 class ChangedValuePreview extends StatelessWidget {
@@ -284,23 +286,21 @@ class ChangedValuePreview extends StatelessWidget {
       builder: (context) {
         return Padding(
           padding: const EdgeInsets.all(12.0),
-          child: Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    target.name, 
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 3,
+                child: Text(
+                  target.name, 
+                  style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
-                ...target.isChange
-                ? _buildChangesRow(target)
-                : _buildNonChangeRow(target),
-              ]
-            ),
+              ),
+              ...target.isChange
+              ? _buildChangesRow(target)
+              : _buildNonChangeRow(target),
+            ]
           ),
         );
       }
