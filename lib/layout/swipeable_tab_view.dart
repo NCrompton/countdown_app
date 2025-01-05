@@ -57,9 +57,7 @@ class _SwipeableTabViewState extends State<SwipeableTabView> with TickerProvider
         middle: Text('Budgets'),
       ),
       child: SafeArea(
-        child: Material(
-          child: _buildPageView()
-        ),
+        child: _buildPageView(),
       )
     );
   }

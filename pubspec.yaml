@@ -41,4 +41,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/calendar_background.png
+    - assets/images/calendar_background_red.png
+    - assets/images/calendar_background_green.png

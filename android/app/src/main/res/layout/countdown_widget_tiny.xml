@@ -20,7 +20,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:scaleType="fitCenter"
-            android:src="@drawable/calendar_background"
+            android:src="@drawable/calendar_background_red"
             android:adjustViewBounds="true"/>
 
         <LinearLayout

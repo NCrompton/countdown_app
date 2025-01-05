@@ -65,41 +65,38 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
 
   Widget _buildEntryList(List<BudgetEntry> entries) {
     return Container(
+      height: MediaQuery.of(context).size.height,
       color: CupertinoColors.systemGroupedBackground,
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: ValueListenableBuilder<bool>(
         valueListenable: _isByMonth,
         builder: (context, isByMonth, child) {
-          return CupertinoListSection(
-            topMargin: 4,
-            hasLeading: true,
-            margin: const EdgeInsets.only(bottom: 0),
-            backgroundColor: CupertinoColors.systemBackground,
-            header: BudgetEntryAddCell(onTap: _showAddEntryPopup),
-            children: [
-              ..._renderDisplayStruct(entries).entries.map((e) {
-                return CupertinoListSection(
-                  header: Text(e.key),
-                  children: [...e.value.map((entry) {
-                    return Builder(
-                      builder: (context) {
-                        return BudgetEntryCell(
-                          onTap: () {
-                            openPageSide(
-                              context, 
-                              BudgetEntryPage(entry: entry),
-                            );
-                          },
-                          entry: entry,
-                        );
-                      },
-                    );
-                  }).toList()]
-                );
-              }).toList(),
-            ]
+          final e = _renderDisplayStruct(entries).entries.toList();
+          return ListView.builder(
+            itemCount: e.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) return BudgetEntryAddCell(onTap: _showAddEntryPopup);
+              return CupertinoListSection(
+                header: Text(e[index - 1].key),
+                children: [...e[index - 1].value.map((entry) {
+                  return Builder(
+                    builder: (context) {
+                      return BudgetEntryCell(
+                        onTap: () {
+                          openPageSide(
+                            context, 
+                            BudgetEntryPage(entry: entry),
+                          );
+                        },
+                        entry: entry,
+                      );
+                    },
+                  );
+                }).toList()]
+              );
+            }
           );
-        }
+        },
       ),
     );
   }
@@ -111,21 +108,11 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
     return SafeArea(
       child: Stack(
         children: [
-          CustomScrollView(
-            slivers: [
-              CupertinoSliverRefreshControl(
-                onRefresh: () => 
-                  ref.refresh(budgetEntriesProviderProvider(widget.thread?.id).future)
-              ),
-              SliverToBoxAdapter(
-                child: switch(state) {
-                  AsyncData(:final value) => _buildEntryList(value),
-                  AsyncLoading() => const Center(child: CircularProgressIndicator()),
-                  _ => const SizedBox(),
-                }
-              ),
-            ],
-          ),
+          switch(state) {
+            AsyncData(:final value) => _buildEntryList(value),
+            AsyncLoading() => const Center(child: CircularProgressIndicator()),
+            _ => const SizedBox(),
+          },
           FloatingMenu(
             menuItems: [
               if (widget.thread != null)
@@ -170,11 +157,12 @@ class BudgetEntryAddCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      child: const Padding(
-        padding: EdgeInsets.all(16), 
-        child: Center(child: Icon(Icons.add))
+      child: Container(
+        color: Colors.white,
+        padding: const EdgeInsets.all(16), 
+        child: const Center(child: Icon(Icons.add))
       )
     );
   }
