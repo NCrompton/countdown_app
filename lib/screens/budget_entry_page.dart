@@ -1,6 +1,5 @@
 import 'package:calendar/components/editable_info_row.dart';
 import 'package:calendar/controllers/input_controller.dart';
-import 'package:calendar/layout/floating_bottom_drawer.dart';
 import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/providers/budget_entry_provider.dart';
 import 'package:calendar/providers/budget_thread_provider.dart';
@@ -104,7 +103,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
     );
   }
 
-  Widget _buildPreview(void Function() dismiss) {
+  void _buildPreview(void Function() dismiss) {
      newEntry
       ..entryName = _nameController.value
       ..entryTime = _createDateController.value
@@ -113,23 +112,35 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
       ..price.currency = _currencyController.value
       ..thread.value = _threadController.value;
 
-    return ChangedValuePreview(
-      targets: [
-        ChangedValue(name: "Name", oldValue: widget.entry.entryName, newValue: newEntry.entryName),
-        ChangedValue(name: "Price", oldValue: widget.entry.price.value.toString(), newValue: newEntry.price.value.toString()),
-        ChangedValue(name: "Currency", oldValue: widget.entry.price.currency.displayName, newValue: newEntry.price.currency.displayName),
-        ChangedValue(name: "Create Time", oldValue: widget.entry.entryTime.formatToDisplay(), newValue: newEntry.entryTime.formatToDisplay()),
-        ChangedValue(name: "Type", oldValue: typeList?[widget.entry.entryType].typeName, newValue: typeList?[newEntry.entryType].typeName),
-        ChangedValue(name: "Thread", oldValue: widget.thread?.threadName, newValue: newEntry.thread.value?.threadName),
-      ],
-      onConfirm:() async {
-        await _updateEntry(newEntry);
-        dismiss();
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
-      },
-      onReject: dismiss,
+    showCupertinoModalPopup(
+      context: context, 
+      builder: (context) {
+        return CupertinoPopupSurface(
+          isSurfacePainted: true,
+          child: ChangedValuePreview(
+            targets: [
+              ChangedValue(name: "Name", oldValue: widget.entry.entryName, newValue: newEntry.entryName),
+              ChangedValue(name: "Price", oldValue: widget.entry.price.value.toString(), newValue: newEntry.price.value.toString()),
+              ChangedValue(name: "Currency", oldValue: widget.entry.price.currency.displayName, newValue: newEntry.price.currency.displayName),
+              ChangedValue(name: "Create Time", oldValue: widget.entry.entryTime.formatToDisplay(), newValue: newEntry.entryTime.formatToDisplay()),
+              ChangedValue(name: "Type", oldValue: typeList?[widget.entry.entryType].typeName, newValue: typeList?[newEntry.entryType].typeName),
+              ChangedValue(name: "Thread", oldValue: widget.thread?.threadName, newValue: newEntry.thread.value?.threadName),
+            ],
+            onConfirm:() async {
+              await _updateEntry(newEntry);
+              dismiss();
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
+            },
+            onReject: () {
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
+            },
+          ),
+        );
+      }
     );
   }
 
@@ -180,7 +191,6 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
 
 /// TODO: consider wrapping listenable to only its edit row widget
 /// TODO: _buildPreview entry on clicking update button instead of on drawerchild
-/// TODO: consider using cupertino pop up instead
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(budgetEntriesProviderProvider(widget.thread?.id));
@@ -190,66 +200,64 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
       navigationBar: CupertinoNavigationBar(
         middle: Text(widget.entry.entryName),
       ),
-      child: _buildListener(
-        builder: (context, child) => FloatingBottomDrawerPage(
-          heightPortion: 0.6,
-          drawerChild: _buildPreview,
-          builder: (context, visibilityController) {
-            if (typeList == null || threadList == null) return const SizedBox(); // called when typeList or threadList is updated
-            return  Container(
-              color: CupertinoColors.systemBackground,
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Column(
-                      children: [
-                        EntryAttributeRow<String>(attributeName: "Name", inputController: _nameController,),
-                        EntryAttributeRow<double>(attributeName: "Price", inputController: _priceController,),
-                        EntryAttributeRow<Currency>(attributeName: "Currency", attributeValueString: _currencyController.value.displayName.toUpperCase(), inputController: _currencyController, enumList:Currency.values),
-                        EntryAttributeRow<DateTime>(attributeName: "Create Time", attributeValueString: _createDateController.value.formatToDisplay(), inputController: _createDateController),
-                        EntryAttributeRow<BudgetEntryType>(attributeName: "Type", attributeValueString: _typeController.value.typeName, inputController: _typeController, customInput: _buildTypeInputWidget(context)),
-                        EntryAttributeRow<BudgetThread?>(attributeName: "Thread", attributeValueString: _threadController.value?.threadName, inputController: _threadController, customInput: _buildThreadInputWidget(context)),
-                      ],
-                    ),
-                  ),
-                  switch(state) {
-                    AsyncLoading() => const SizedBox.shrink(),
-                    _ => Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      child: SafeArea(
+        child: _buildListener(
+          builder: (context, child) {
+              if (typeList == null || threadList == null) return const SizedBox(); // called when typeList or threadList is updated
+              return  Container(
+                color: CupertinoColors.systemBackground,
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Column(
                         children: [
-                          Expanded(
-                            flex: 1,
-                            child: CupertinoButton.filled(
-                              padding: const EdgeInsets.all(0),
-                              onPressed: () => visibilityController.setVisibility(true),
-                              child: const Text("Update"),
-                            ),
-                          ),
-
-                          const SizedBox(width: 12),
-                          
-                          Expanded(
-                            flex: 1,
-                            child: CupertinoButton(
-                              padding: const EdgeInsets.all(0),
-                              color: CupertinoColors.destructiveRed,
-                              onPressed: showDeleteWarning,
-                              child: const Text("Delete"),
-                            ),
-                          ),
-                        ]
+                          EntryAttributeRow<String>(attributeName: "Name", inputController: _nameController,),
+                          EntryAttributeRow<double>(attributeName: "Price", inputController: _priceController,),
+                          EntryAttributeRow<Currency>(attributeName: "Currency", attributeValueString: _currencyController.value.displayName.toUpperCase(), inputController: _currencyController, enumList:Currency.values),
+                          EntryAttributeRow<DateTime>(attributeName: "Create Time", attributeValueString: _createDateController.value.formatToDisplay(), inputController: _createDateController),
+                          EntryAttributeRow<BudgetEntryType>(attributeName: "Type", attributeValueString: _typeController.value.typeName, inputController: _typeController, customInput: _buildTypeInputWidget(context)),
+                          EntryAttributeRow<BudgetThread?>(attributeName: "Thread", attributeValueString: _threadController.value?.threadName, inputController: _threadController, customInput: _buildThreadInputWidget(context)),
+                        ],
                       ),
                     ),
-                  }
-                ]
-              )
-            );
-          }
-        ), 
-      ),
+                    switch(state) {
+                      AsyncLoading() => const SizedBox.shrink(),
+                      _ => Container(
+                        padding: const EdgeInsets.all(8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: CupertinoButton.filled(
+                                padding: const EdgeInsets.all(0),
+                                onPressed: () => _buildPreview(() => Navigator.pop(context)),
+                                child: const Text("Update"),
+                              ),
+                            ),
+        
+                            const SizedBox(width: 12),
+                            
+                            Expanded(
+                              flex: 1,
+                              child: CupertinoButton(
+                                padding: const EdgeInsets.all(0),
+                                color: CupertinoColors.destructiveRed,
+                                onPressed: showDeleteWarning,
+                                child: const Text("Delete"),
+                              ),
+                            ),
+                          ]
+                        ),
+                      ),
+                    }
+                  ]
+                )
+              );
+            }
+          ),
+      ), 
     );
   }
 }
