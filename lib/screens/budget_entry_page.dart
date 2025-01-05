@@ -24,12 +24,12 @@ class BudgetEntryPage extends ConsumerStatefulWidget {
 }
 
 class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
-  InputController<String> _nameController = InputController("");
-  InputController<double> _priceController = InputController(0.0);
-  InputController<Currency> _currencyController = InputController(Currency.hkd);
-  InputController<DateTime> _createDateController = InputController(DateTime.now());
-  InputController<BudgetEntryType> _typeController = InputController(BudgetEntryType.defaultType());
-  InputController<BudgetThread?> _threadController = InputController(null);
+  final InputController<String> _nameController = InputController("");
+  final InputController<double> _priceController = InputController(0.0);
+  final InputController<Currency> _currencyController = InputController(Currency.hkd);
+  final InputController<DateTime> _createDateController = InputController(DateTime.now());
+  final InputController<BudgetEntryType> _typeController = InputController(BudgetEntryType.defaultType());
+  final InputController<BudgetThread?> _threadController = InputController(null);
   List<BudgetEntryType>? typeList;
   List<BudgetThread?>? threadList;
   late BudgetEntry newEntry;
@@ -37,12 +37,11 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
   @override
   void initState() {
     super.initState();
-    _nameController = InputController(widget.entry.entryName);    
-    _priceController = InputController(widget.entry.price.value);    
-    _currencyController = InputController(widget.entry.price.currency);    
-    _typeController = InputController(typeList?[widget.entry.entryType] ?? BudgetEntryType.defaultType());
-    _createDateController = InputController(widget.entry.entryTime);
-    _threadController = InputController(widget.thread);
+    _nameController.set(widget.entry.entryName);    
+    _priceController.set(widget.entry.price.value);    
+    _currencyController.set(widget.entry.price.currency);    
+    _createDateController.set(widget.entry.entryTime);
+    _threadController.set(widget.thread);
 
     newEntry = BudgetEntry.copy(widget.entry);
   }
@@ -196,6 +195,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
           heightPortion: 0.6,
           drawerChild: _buildPreview,
           builder: (context, visibilityController) {
+            if (typeList == null || threadList == null) return const SizedBox(); // called when typeList or threadList is updated
             return  Container(
               color: CupertinoColors.systemBackground,
               padding: const EdgeInsets.all(12.0),
@@ -208,13 +208,13 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
                         EntryAttributeRow<double>(attributeName: "Price", inputController: _priceController,),
                         EntryAttributeRow<Currency>(attributeName: "Currency", attributeValueString: _currencyController.value.displayName.toUpperCase(), inputController: _currencyController, enumList:Currency.values),
                         EntryAttributeRow<DateTime>(attributeName: "Create Time", attributeValueString: _createDateController.value.formatToDisplay(), inputController: _createDateController),
-                        if (typeList != null) EntryAttributeRow<BudgetEntryType>(attributeName: "Type", attributeValueString: _typeController.value.typeName, inputController: _typeController, customInput: _buildTypeInputWidget(context)),
-                        if (threadList != null) EntryAttributeRow<BudgetThread?>(attributeName: "Thread", attributeValueString: _threadController.value?.threadName, inputController: _threadController, customInput: _buildThreadInputWidget(context)),
+                        EntryAttributeRow<BudgetEntryType>(attributeName: "Type", attributeValueString: _typeController.value.typeName, inputController: _typeController, customInput: _buildTypeInputWidget(context)),
+                        EntryAttributeRow<BudgetThread?>(attributeName: "Thread", attributeValueString: _threadController.value?.threadName, inputController: _threadController, customInput: _buildThreadInputWidget(context)),
                       ],
                     ),
                   ),
                   switch(state) {
-                    AsyncLoading() => const CircularProgressIndicator(),
+                    AsyncLoading() => const SizedBox.shrink(),
                     _ => Container(
                       padding: const EdgeInsets.all(8),
                       child: Row(
