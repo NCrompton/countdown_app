@@ -33,6 +33,13 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
   List<BudgetThread?>? threadList;
   late BudgetEntry newEntry;
 
+  final optionsProvider = FutureProvider<(List<BudgetEntryType>, List<BudgetThread>)>((ref) async {
+    final type = await ref.watch(budgetEntryTypeProviderProvider.future);
+    final thread = await ref.watch(budgetThreadProviderProvider.future);
+
+    return (type, thread);
+  });
+
   @override
   void initState() {
     super.initState();
@@ -72,34 +79,6 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
         children: threadList!.map((thread) => Center(
           child: Text(thread?.threadName ?? "🚫"),
         )).toList(),
-    );
-  }
-
-  Widget _buildListener({required Widget Function(BuildContext, Widget?) builder, Widget? child}) {
-    return ListenableBuilder(
-      listenable: _nameController, 
-      child: child,
-      builder: (context, c) =>
-      ListenableBuilder(
-        listenable: _threadController,
-        builder: (context, _) =>
-        ListenableBuilder(
-          listenable: _createDateController,
-          builder: (context, _) => 
-          ListenableBuilder(
-            listenable: _currencyController,
-            builder: (context, _) => 
-            ListenableBuilder(
-              listenable: _priceController,
-              builder: (context, _) => 
-              ListenableBuilder(
-                listenable: _typeController,
-                builder: (context, _) => builder(context, c),
-              )
-            )
-          )
-        )
-      )
     );
   }
 
@@ -182,11 +161,10 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
   }
 
   /// Only react if provider state changes
-  void initValue() async {
-    typeList = await ref.watch(budgetEntryTypeProviderProvider.future);
-    threadList = [null, ...(await ref.watch(budgetThreadProviderProvider.future))];
-    
-    _typeController.set(typeList![widget.entry.entryType]);
+  void initValue(List<BudgetEntryType> types, List<BudgetThread> threads) async {
+    typeList = types;
+    threadList = [null, ...threads];
+    _typeController.set(types[widget.entry.entryType]);
   }
 
 /// TODO: consider wrapping listenable to only its edit row widget
@@ -194,68 +172,92 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(budgetEntriesProviderProvider(widget.thread?.id));
-    initValue(); // when ref update, this widget will be rebuilt
+    final options = ref.watch(optionsProvider);
     return CupertinoPageScaffold(
       resizeToAvoidBottomInset: false,
       navigationBar: const CupertinoNavigationBar(
         middle: Text("Budget Entry"),
       ),
       child: SafeArea(
-        child: _buildListener(
-          builder: (context, child) {
-              if (typeList == null || threadList == null) return const SizedBox.shrink(); // called when typeList or threadList is updated
-              return  Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        children: [
-                          EntryAttributeRow<String>(attributeName: "Name", inputController: _nameController,),
-                          EntryAttributeRow<double>(attributeName: "Price", inputController: _priceController,),
-                          EntryAttributeRow<Currency>(attributeName: "Currency", attributeValueString: _currencyController.value.displayName.toUpperCase(), inputController: _currencyController, enumList:Currency.values),
-                          EntryAttributeRow<DateTime>(attributeName: "Create Time", attributeValueString: _createDateController.value.formatToDisplay(), inputController: _createDateController),
-                          EntryAttributeRow<BudgetEntryType>(attributeName: "Type", attributeValueString: _typeController.value.typeName, inputController: _typeController, customInput: _buildTypeInputWidget(context)),
-                          EntryAttributeRow<BudgetThread?>(attributeName: "Thread", attributeValueString: _threadController.value?.threadName, inputController: _threadController, customInput: _buildThreadInputWidget(context)),
-                        ],
-                      ),
-                    ),
-                    switch(state) {
-                      AsyncLoading() => const SizedBox.shrink(),
-                      _ => Container(
-                        padding: const EdgeInsets.all(8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        child: switch(options) {
+          AsyncData(:final value) => 
+            Builder(
+              builder: (context) {
+                initValue(value.$1, value.$2);
+                return Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Column(
                           children: [
-                            Expanded(
-                              flex: 1,
-                              child: CupertinoButton.filled(
-                                padding: const EdgeInsets.all(0),
-                                onPressed: () => _buildPreview(() => Navigator.pop(context)),
-                                child: const Text("Update"),
-                              ),
+                            EntryAttributeRow<String>(attributeName: "Name", inputController: _nameController,),
+                            EntryAttributeRow<double>(attributeName: "Price", inputController: _priceController,),
+                            ListenableBuilder(
+                              listenable: _currencyController,
+                              builder: (context, _) {
+                                return EntryAttributeRow<Currency>(attributeName: "Currency", attributeValueString: _currencyController.value.displayName.toUpperCase(), inputController: _currencyController, enumList:Currency.values);
+                              }
                             ),
-        
-                            const SizedBox(width: 12),
-                            
-                            Expanded(
-                              flex: 1,
-                              child: CupertinoButton(
-                                padding: const EdgeInsets.all(0),
-                                color: CupertinoColors.destructiveRed,
-                                onPressed: showDeleteWarning,
-                                child: const Text("Delete"),
-                              ),
+                            ListenableBuilder(
+                              listenable: _createDateController,
+                              builder: (context, _) {
+                                return EntryAttributeRow<DateTime>(attributeName: "Create Time", attributeValueString: _createDateController.value.formatToDisplay(), inputController: _createDateController);
+                              }
                             ),
-                          ]
+                            ListenableBuilder(
+                              listenable: _typeController,
+                              builder: (context, _) {
+                                return EntryAttributeRow<BudgetEntryType>(attributeName: "Type", attributeValueString: _typeController.value.typeName, inputController: _typeController, customInput: _buildTypeInputWidget(context));
+                              }
+                            ),
+                            ListenableBuilder(
+                              listenable: _threadController,
+                              builder: (context, _) {
+                                return EntryAttributeRow<BudgetThread?>(attributeName: "Thread", attributeValueString: _threadController.value?.threadName, inputController: _threadController, customInput: _buildThreadInputWidget(context));
+                              }
+                            ),
+                          ],
                         ),
                       ),
-                    }
-                  ]
-                )
-              );
-            }
-          ),
+                      switch(state) { // ensure provider is init for Update
+                        AsyncLoading() => const SizedBox.shrink(),
+                        _ => Container(
+                          padding: const EdgeInsets.all(8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Expanded(
+                                flex: 1,
+                                child: CupertinoButton.filled(
+                                  padding: const EdgeInsets.all(0),
+                                  onPressed: () => _buildPreview(() => Navigator.pop(context)),
+                                  child: const Text("Update"),
+                                ),
+                              ),
+                      
+                              const SizedBox(width: 12),
+                              
+                              Expanded(
+                                flex: 1,
+                                child: CupertinoButton(
+                                  padding: const EdgeInsets.all(0),
+                                  color: CupertinoColors.destructiveRed,
+                                  onPressed: showDeleteWarning,
+                                  child: const Text("Delete"),
+                                ),
+                              ),
+                            ]
+                          ),
+                        ),
+                      }
+                    ]
+                  )
+                );
+              }
+            ),
+          _ => const SizedBox.shrink(),
+        }
       ), 
     );
   }
