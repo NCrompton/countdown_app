@@ -184,9 +184,9 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
   /// Only react if provider state changes
   void initValue() async {
     typeList = await ref.watch(budgetEntryTypeProviderProvider.future);
-    _typeController.set(typeList![widget.entry.entryType]);
-    
     threadList = [null, ...(await ref.watch(budgetThreadProviderProvider.future))];
+    
+    _typeController.set(typeList![widget.entry.entryType]);
   }
 
 /// TODO: consider wrapping listenable to only its edit row widget
@@ -197,15 +197,14 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
     initValue(); // when ref update, this widget will be rebuilt
     return CupertinoPageScaffold(
       resizeToAvoidBottomInset: false,
-      navigationBar: CupertinoNavigationBar(
-        middle: Text(widget.entry.entryName),
+      navigationBar: const CupertinoNavigationBar(
+        middle: Text("Budget Entry"),
       ),
       child: SafeArea(
         child: _buildListener(
           builder: (context, child) {
-              if (typeList == null || threadList == null) return const SizedBox(); // called when typeList or threadList is updated
-              return  Container(
-                color: CupertinoColors.systemBackground,
+              if (typeList == null || threadList == null) return const SizedBox.shrink(); // called when typeList or threadList is updated
+              return  Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Column(
                   children: [
