@@ -172,7 +172,9 @@ internal fun updateAppWidget(
 
         setOnClickPendingIntent(R.id.widget_box, pendingIntent)
 
-        setImageViewResource(R.id.calendar_background, R.drawable.calendar_background_green)
+        setImageViewResource(R.id.calendar_background,
+            if (date.isBefore(LocalDateTime.now())) R.drawable.calendar_background_red
+            else R.drawable.calendar_background_green )
 
         setInt(R.id.interval_string, "setTextColor", Color.parseColor(textColorString))
         setTextViewText(R.id.interval_string, intervalString)

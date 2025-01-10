@@ -16,6 +16,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class BudgetThreadList extends ConsumerWidget {
   const BudgetThreadList({super.key});
 
+  List<BudgetThread> _sortThreads(List<BudgetThread> threads) => threads..sort((a, b) => a.id.compareTo(b.id));
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final threadsProvider = ref.watch(budgetThreadProviderProvider);
@@ -45,10 +47,10 @@ class BudgetThreadList extends ConsumerWidget {
                   ),
                   SliverToBoxAdapter(
                     child: switch(threadsProvider) {
-                      AsyncData(:final value) => value.isEmpty? 
-                        const SizedBox(child: Center(child: Text("Add a thread on top right"))) : 
-                        CupertinoListSection(
-                          children: value.mapIndexed((thread, i) {
+                      AsyncData(:final value) => value.isEmpty
+                        ? const SizedBox(child: Center(child: Text("Add a thread on top right"))) 
+                        : CupertinoListSection(
+                          children: _sortThreads(value).mapIndexed((thread, i) {
                             return Builder(
                               builder: (context) {
                                 return BudgetThreadCell(
@@ -98,7 +100,7 @@ class BudgetThreadCell extends StatelessWidget {
       onTap: onTap,
       leftWidget: Text(thread.threadName),
       rightWidget: isTarget ? const Icon(Icons.star) : null, 
-      subLeftWidget: Text( "${thread.budgets.firstOrNull?.entryTime.formatToShortDisplay()} - ${thread.budgets.lastOrNull?.entryTime.formatToShortDisplay()}"),
+      subLeftWidget: Text( "${thread.beginDate?.formatToShortDisplay()} - ${thread.endDate?.formatToShortDisplay()}"),
     );
   }
 }

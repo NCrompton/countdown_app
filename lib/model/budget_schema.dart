@@ -10,6 +10,11 @@ class BudgetThread {
   Id id = Isar.autoIncrement;
   String threadName;
   bool enabled = true;
+
+  @ignore
+  DateTime? beginDate;
+  @ignore
+  DateTime? endDate;
   
   @ignore
   bool isTarget = false;
@@ -25,6 +30,12 @@ class BudgetThread {
     required this.preferredCurrency,
     IsarLinks<BudgetEntry>? budgets
   }): budgets = budgets ?? IsarLinks<BudgetEntry>();
+
+  static const Id allEntryId = -1;
+  static BudgetThread allEntry = BudgetThread(
+    threadName: "",
+    preferredCurrency: Currency.hkd,
+  )..id = allEntryId;
 
   BudgetThread.fromJson(Map<String, dynamic> json):
     id = json['id'],
@@ -67,7 +78,7 @@ class BudgetEntry {
     id = entry.id,
     entryName = entry.entryName,
     price = LocalizedPrice.copy(entry.price),
-    thread = entry.thread,
+    thread = IsarLink<BudgetThread>()..value = entry.thread.value,
     entryType = entry.entryType,
     entryTime = entry.entryTime;
 

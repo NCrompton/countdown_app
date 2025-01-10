@@ -8,7 +8,8 @@ class ProjectObserver extends ProviderObserver {
     Object? value,
     ProviderContainer container,
   ) {
-    Log().log('Provider $provider was initialized with $value');
+    // Log().log('Provider $provider was initialized with $value');
+    Log().log('Provider $provider was initialized');
   }
 
   @override
@@ -26,7 +27,8 @@ class ProjectObserver extends ProviderObserver {
     Object? newValue,
     ProviderContainer container,
   ) {
-    Log().log('Provider $provider updated from $previousValue to $newValue');
+    // Log().log('Provider $provider updated from $previousValue to $newValue');
+    Log().log('Provider $provider updated');
   }
 
   @override

@@ -1,30 +1,34 @@
 import 'package:calendar/model/budget_schema.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+part 'budget_database.g.dart';
 
 // TODO: use riverpod provide the service, which the service will operate on db and stored value
 // TODO: provider should only work on state, service should work on data
-class BudgetDatabase {
-  final Isar _isar;
-  static BudgetDatabase? _instance;
+@riverpod
+class BudgetDatabase extends _$BudgetDatabase{
+  late final Isar _isar;
 
-  BudgetDatabase({required Isar isar}):_isar = isar;
+  Future<Isar> _openConnection() async {
+    final dir = await getApplicationDocumentsDirectory();
+    return await Isar.open(
+      [
+        BudgetThreadSchema, 
+        BudgetEntrySchema, 
+        BudgetEntryTypeSchema
+      ],
+      directory: dir.path,
+    );
+  }
 
-  //TODO: change to keepAlive ref
-  static Future<BudgetDatabase> getInstance() async {
-    if (_instance == null) {
-      final dir = await getApplicationDocumentsDirectory();
-      final isar = await Isar.open(
-        [
-          BudgetThreadSchema, 
-          BudgetEntrySchema, 
-          BudgetEntryTypeSchema
-        ],
-        directory: dir.path,
-      );
-      _instance = BudgetDatabase(isar: isar);
-    }
-    return _instance!;
+  @override
+  Future<BudgetDatabase> build() async {
+    state = const AsyncLoading();
+    ref.keepAlive();
+    ref.onDispose(() => _isar.close);
+    _isar = await _openConnection();
+    return this;
   }
 } 
 
@@ -56,15 +60,46 @@ extension BudgetThreadDatabase on BudgetDatabase {
     });
   }
 
-  Future<bool> deleteThread(Id id) async {
+  Future<bool> deleteThread(BudgetThread thread) async {
     return await _isar.writeTxn(() async {
-      return await _isar.budgetThreads.delete(id);
+      thread.enabled = false;
+      await thread.budgets.load();
+      for (final e in thread.budgets) {
+        e.enabled = false;
+        _isar.budgetEntrys.put(e);
+      }
+      return await _isar.budgetThreads.put(thread) > 0;
+    });
+  }
+
+  Future<bool> hardDeleteThread(BudgetThread thread) async {
+    return await _isar.writeTxn(() async {
+      await thread.budgets.load();
+      for (final e in thread.budgets) {
+        e.enabled = false;
+        _isar.budgetEntrys.delete(e.id);
+      }
+      return await _isar.budgetThreads.delete(thread.id);
     });
   }
 
   Future<void> saveEntryToThread(BudgetThread thread) async {
     return await _isar.writeTxn(() async {
       await thread.budgets.save();
+    });
+  }
+
+  Future<void> addExistingEntryToThread(Id threadId, Id entryId) async {
+    return await _isar.writeTxn(() async {
+      final thread = await _isar.budgetThreads.get(threadId);
+      final entry = await _isar.budgetEntrys.get(entryId);
+
+      if (thread == null || entry == null) return;
+      entry.thread.value = thread;
+      thread.budgets.add(entry);
+
+      entry.thread.save();
+      thread.budgets.save();
     });
   }
 
@@ -84,34 +119,18 @@ extension BudgetEntryDatabase on BudgetDatabase {
   Future<List<BudgetEntry>> getEntriesFromThread(Id? threadId) async {
     return await entriesQuery(threadId)
       .findAll()
-      ..forEach(loadThread);
-    // return await _isar.budgetEntrys
-    //     .filter()
-    //     .enabledEqualTo(true)
-    //     .thread((t) => t.idEqualTo(threadId))
-    //     .findAll()
-    //   ..toList()
-    //   ..forEach(loadThread)
-    //   ..sortByCreateTimeAsc();
-  }
-
-  Future<List<BudgetEntry>> getAllEntries() async {
-    return await entriesQuery(null)
-      .findAll()
-      ..forEach(loadThread);
-    // return await _isar.budgetEntrys
-    //     .filter()
-    //     .enabledEqualTo(true)
-    //     .sortByEntryTime()
-    //     .findAll()
-    //   ..forEach(loadThread);
+      ..forEach((e) async => await loadThread(e));
   }
 
   Query<BudgetEntry> entriesQuery(Id? threadId) {
     var query = _isar.budgetEntrys
       .filter()
       .enabledEqualTo(true);
-      if (threadId != null) query = query.thread((t) => t.idEqualTo(threadId));
+      if (threadId == null) {
+        query = query.threadIsNull();
+      } else if (threadId != BudgetThread.allEntryId) {
+        query = query.thread((t) => t.idEqualTo(threadId));
+      } 
     return query
       .sortByEntryTime()
       .build();
@@ -119,17 +138,41 @@ extension BudgetEntryDatabase on BudgetDatabase {
 
   Future<Id> createEntry(BudgetEntry entry) async {
     return await _isar.writeTxn(() async {
-      return _isar.budgetEntrys.put(entry);
+      return await _isar.budgetEntrys.put(entry);
     });
   }
 
   Future<bool> updateEntry(BudgetEntry entry) async {
     return await _isar.writeTxn(() async {
-      return await _isar.budgetEntrys.put(entry) > 0;
+      final oldE = (await _isar.budgetEntrys.get(entry.id));
+      await oldE?.thread.load();
+
+      final oldT = oldE?.thread.value;
+      final newT = entry.thread.value;
+
+      final eid = await _isar.budgetEntrys.put(entry);
+      if (oldT == newT) return eid > 0; // thread not updated   
+
+      if (newT == null) entry.thread.reset(); // if thread is removed
+      entry.thread.save();
+      
+      oldT?.budgets.remove(oldE); // remove entry from old thread
+      oldT?.budgets.save();
+
+      newT?.budgets.add(entry); // add entry to new thread
+      newT?.budgets.save();
+      return eid > 0;
     });
   }
 
-  Future<bool> deleteEntry(Id id) async {
+  Future<bool> deleteEntry(BudgetEntry entry) async {
+    return await _isar.writeTxn(() async {
+      entry.enabled = false;
+      return await createEntry(entry) > 0;
+    });
+  }
+  
+  Future<bool> hardDeleteEntry(Id id) async {
     return await _isar.writeTxn(() async {
       return await _isar.budgetEntrys.delete(id);
     });
@@ -148,9 +191,9 @@ extension BudgetEntryDatabase on BudgetDatabase {
     });
   }
 
-  void loadThread(BudgetEntry entry) {
-    return _isar.writeTxnSync(() {
-        entry.thread.loadSync();
+  Future<void> loadThread(BudgetEntry entry) async {
+    return _isar.writeTxn(() async {
+        await entry.thread.load();
     });
   }
 }

@@ -1,47 +1,90 @@
 import 'package:calendar/model/budget_schema.dart';
-import 'package:calendar/providers/budget_entry_provider.dart';
 import 'package:calendar/services/budget_database.dart';
 import 'package:calendar/services/supabase_service.dart';
+import 'package:calendar/utils/logger.dart';
 import 'package:calendar/utils/storage.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:collection/collection.dart';
 import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'budget_thread_provider.g.dart';
 
-// TODO: now the state update twice everytime it is updated: {listenToDB, _fetchThreads}
-// TODO: prevent calling late initialization of var 
-// TODO: the function should act on the state, instead of just refetching the state
 @riverpod
 class BudgetThreadProvider extends _$BudgetThreadProvider {
-
-    late BudgetDatabase db;
-    late SupabaseService backup;
-
     Future<List<BudgetThread>> _fetchThreads() async {
-      return await db.getAllThreads();
+      Log().log("refetching threads");
+      final db = await ref.read(budgetDatabaseProvider.future);
+      final threads = await db.getAllThreads();
+
+      final targetThreadId = await ref.read(targetThreadProvider.future);
+
+      for (var t in threads) {
+        t.isTarget = t.id == targetThreadId;
+        _updateThreadPeriod(t);
+      }
+
+      return threads;
     }
 
     @override
     Future<List<BudgetThread>> build() async {
       state = const AsyncValue.loading();
-
-      db = await BudgetDatabase.getInstance();
-      backup = await ref.read(supabaseServiceProvider.future);
-      await _listenToDB();
-
-      final targetThreadId = await ref.watch(targetThreadProvider.future);
-      final threads = await _fetchThreads();
-      for (var t in threads) {
-        t.isTarget = t.id == targetThreadId;
-      }
-
       ref.keepAlive();
-      return threads;
+
+      _listenToDB();
+
+      // require no refetch 
+      ref.listen(targetThreadProvider.future, (_, targetId) async {
+        final tid = await targetId;
+        final threads = state.value!;
+        for (var t in threads) {
+          t.isTarget = t.id == tid;
+        }
+        state = AsyncData(threads);
+      });
+
+      return await _fetchThreads();
     } 
 
+    Future<BudgetThread> _updateThreadPeriod(BudgetThread t) async {
+      if (t.budgets.isEmpty) return t;
+      t.beginDate = t.budgets
+        .where((e) => e.enabled)
+        .sorted((a, b) => a.entryTime.compareTo(b.entryTime)).first.entryTime;
+      t.endDate = t.budgets
+        .where((e) => e.enabled)
+        .sorted((a, b) => a.entryTime.compareTo(b.entryTime)).last.entryTime;
+      return t;
+    }
+
+    Future<List<BudgetThread>> _updateThreadFromState(BudgetThread thread) async {
+      final copy = state.value ?? await _fetchThreads();
+      return [thread, ...copy..removeWhere((t) => t.id == thread.id)];
+    }
+
+    void removeThreadMeta(Id? threadId, BudgetEntry entry) async {
+      final thread = state.value?.firstWhereOrNull((t) => t.id == threadId);
+      if (thread == null) return; // return if thread == null || entry.thread.value == null || no thread found
+      thread.budgets.remove(thread.budgets.where((e) => e.id == entry.id).first);
+
+      state = AsyncData(await _updateThreadFromState(await _updateThreadPeriod(thread)));
+    }
+
+    void updateThreadMeta(Id? threadId, BudgetEntry entry) async {
+      final thread = state.value?.firstWhereOrNull((t) => t.id == threadId);
+      if (thread == null) return; // return if thread == null || entry.thread.value == null || no thread found
+      if (thread.endDate == null || entry.entryTime.isAfter(thread.endDate!)) {
+        thread.endDate = entry.entryTime;
+      }
+      if (thread.beginDate == null || entry.entryTime.isBefore(thread.beginDate!)) {
+        thread.beginDate = entry.entryTime;
+      }
+      
+      state = AsyncData(await _updateThreadFromState(thread));
+    }
+
     Future<void> _listenToDB() async {
-      db.threadQuery()
+      (await ref.read(budgetDatabaseProvider.future)).threadQuery()
         .watch()
         .listen((threads) async => 
           state = AsyncData(threads));
@@ -49,52 +92,58 @@ class BudgetThreadProvider extends _$BudgetThreadProvider {
 
     Future<void> addBudgetThread(BudgetThread thread) async {
       state = const AsyncValue.loading();
+      final copy = state.value ?? await _fetchThreads();
 
-      await db.createThread(thread);
-      state = AsyncData(await _fetchThreads());
+      ref.read(budgetDatabaseProvider.future)
+          .then((db) => db.createThread(thread));
 
-      backup.saveThread(thread);
+      state = AsyncData([thread, ...copy]);
+
+      ref.read(supabaseServiceProvider.notifier).saveThread(thread);
     }
     
     Future<void> updateBudgetThread(BudgetThread thread) async {
       state = const AsyncValue.loading();
 
-      ref.read(supabaseServiceProvider.notifier).updateThread(thread);
       state = await AsyncValue.guard(() async {
-        final db = await BudgetDatabase.getInstance();
-        await db.updateThread(thread);
-        return _fetchThreads();
+        final copy = state.value ?? await _fetchThreads();
+
+        ref.read(budgetDatabaseProvider.future)
+          .then((db) => db.updateThread(thread));
+
+        copy.removeWhere((t) => t.id == thread.id);
+        return [thread, ...copy];
       });
+
+      ref.read(supabaseServiceProvider.notifier).updateThread(thread);
     }
     
     Future<void> deleteBudgetThread(BudgetThread thread) async {
-      state = const AsyncValue.loading();
-
+      state = const AsyncLoading();
       state = await AsyncValue.guard(() async {
-        final entries = await ref.read(budgetEntriesProviderProvider(thread.id).future);
-        for (var e in entries) {
-          e.enabled = false;
-          await db.updateEntry(e);
-        }
-        thread.enabled = false;
-        await db.updateThread(thread);
+        final copy = state.value ?? await _fetchThreads();
+
+        ref.read(budgetDatabaseProvider.future)
+          .then((db) => db.deleteThread(thread));
         
-        return _fetchThreads();
+        return copy..removeWhere((t) => t.id == thread.id);
       });
 
-      await backup.deleteThread(thread.id);
+      ref.read(supabaseServiceProvider.notifier).deleteThread(thread.id);
     }
 
-    Future<void> hardDeleteBudgetThread(Id threadId) async {
-      state = const AsyncValue.loading();
-
+    Future<void> hardDeleteBudgetThread(BudgetThread thread) async {
+      state = const AsyncLoading();
       state = await AsyncValue.guard(() async {
-        await db.deleteThread(threadId);
-        // return state.value!..removeWhere((t) => t.id == threadId);
-        return _fetchThreads();
+        final copy = state.value ?? await _fetchThreads();
+        
+        ref.read(budgetDatabaseProvider.future)
+          .then((db) => db.hardDeleteThread(thread));
+
+        return copy..removeWhere((t) => t.id == thread.id);
       });
 
-      await backup.deleteEntry(threadId);
+      ref.read(supabaseServiceProvider.notifier).deleteEntry(thread.id);
     }
 }
 
@@ -107,8 +156,9 @@ class TargetThread extends _$TargetThread {
     return (await LocalStorageManager.instance()).getTargetBudgetThread();
   }
 
-  Future<void> updateTargetThread(Id? id) async {
-    (await LocalStorageManager.instance()).setTargetBudgetThread(id);
+  void updateTargetThread(Id? id) {
+    LocalStorageManager.instance()
+      .then((storage) => storage.setTargetBudgetThread(id));
     state = AsyncData(id);
   }
 }

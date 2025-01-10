@@ -17,6 +17,7 @@ class SupabaseService extends _$SupabaseService{
   @override
   Future<SupabaseService> build() async {
     state = const AsyncLoading();
+    ref.keepAlive();
     return initSupabase();
   }
 

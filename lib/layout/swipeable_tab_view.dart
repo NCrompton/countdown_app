@@ -18,7 +18,6 @@ class SwipeableTabView extends StatefulWidget {
 }
 
 class _SwipeableTabViewState extends State<SwipeableTabView> with TickerProviderStateMixin{
-  late PageController _pageController;
   late TabController _tabController;
   late int _currentPage;
 
@@ -41,12 +40,6 @@ class _SwipeableTabViewState extends State<SwipeableTabView> with TickerProvider
     setState(() {
       _currentPage = index;
     });
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
   }
 
   @override

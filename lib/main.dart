@@ -49,8 +49,9 @@ Future<void> budgetWidgetCallback(Uri? data) async {
     if (data?.scheme != callbackPrefix.toLowerCase()) return;
     if (data?.host != sBudgetWidgetCallback.toLowerCase()) return;
 
-    final storage = await LocalStorageManager.instance();
-    final targetThreadId = storage.getTargetBudgetThread();
+    // final storage = await LocalStorageManager.instance();
+    // final targetThreadId = storage.getTargetBudgetThread();
+    final targetThreadId = await container.read(targetThreadProvider.future);
     
     // Initialize providers
     await container.read(budgetThreadProviderProvider.future);

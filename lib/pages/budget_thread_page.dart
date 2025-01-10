@@ -72,29 +72,32 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
         valueListenable: _isByMonth,
         builder: (context, isByMonth, child) {
           final e = _renderDisplayStruct(entries).entries.toList();
-          return ListView.builder(
-            itemCount: e.length + 1,
-            itemBuilder: (context, index) {
-              if (index == 0) return BudgetEntryAddCell(onTap: _showAddEntryPopup);
-              return CupertinoListSection(
-                header: Text(e[index - 1].key),
-                children: [...e[index - 1].value.map((entry) {
-                  return Builder(
-                    builder: (context) {
-                      return BudgetEntryCell(
-                        onTap: () {
-                          openPageSide(
-                            context, 
-                            BudgetEntryPage(entry: entry),
-                          );
-                        },
-                        entry: entry,
-                      );
-                    },
-                  );
-                }).toList()]
-              );
-            }
+          return RefreshIndicator(
+            onRefresh: () async => ref.refresh(budgetEntriesProviderProvider(widget.thread?.id)),
+            child: ListView.builder(
+              itemCount: e.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) return BudgetEntryAddCell(onTap: _showAddEntryPopup);
+                return CupertinoListSection(
+                  header: Text(e[index - 1].key),
+                  children: [...e[index - 1].value.map((entry) {
+                    return Builder(
+                      builder: (context) {
+                        return BudgetEntryCell(
+                          onTap: () {
+                            openPageSide(
+                              context, 
+                              BudgetEntryPage(entry: entry),
+                            );
+                          },
+                          entry: entry,
+                        );
+                      },
+                    );
+                  }).toList()]
+                );
+              }
+            ),
           );
         },
       ),
@@ -103,7 +106,7 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(budgetEntriesProviderProvider(widget.thread?.id));
+    final state = ref.watch(budgetEntriesProviderProvider(widget.thread?.id ?? BudgetThread.allEntryId));
     final targetThread = ref.watch(targetThreadProvider);
     return SafeArea(
       child: Stack(
