@@ -138,7 +138,14 @@ extension BudgetEntryDatabase on BudgetDatabase {
 
   Future<Id> createEntry(BudgetEntry entry) async {
     return await _isar.writeTxn(() async {
-      return await _isar.budgetEntrys.put(entry);
+      final eid = await _isar.budgetEntrys.put(entry);
+      final thread = entry.thread.value;
+      
+      entry.thread.save();
+      thread?.budgets.add(entry);
+      thread?.budgets.save();
+
+      return eid;
     });
   }
 

@@ -26,23 +26,26 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     return await _fetchAllEntries();
   }
 
-  void _notifyEntryAdd({required BudgetEntry entry, Id? id = BudgetThread.allEntryId} ) {
+  void _notifyAdd({required BudgetEntry entry, Id? id = BudgetThread.allEntryId} ) {
     ref.read(budgetThreadProviderProvider.notifier).updateThreadMeta(entry.thread.value?.id, entry);
     ref.read(budgetEntriesProviderProvider(id).notifier)
-      .addEntryToThread(entry);
+      .addEntryToState(entry);
   }
 
-  void _notifyEntryDelete({required BudgetEntry entry, Id? id = BudgetThread.allEntryId} ) {
+  void _notifyDelete({required BudgetEntry entry, Id? id = BudgetThread.allEntryId} ) {
     ref.read(budgetThreadProviderProvider.notifier).removeThreadMeta(entry.thread.value?.id, entry);
     ref.read(budgetEntriesProviderProvider(id).notifier)
-      .removeEntryfromThread(entry);
+      .removeEntryfromState(entry);
   }
   
-  void _notifyEntryUpdated({required BudgetEntry entry, Id? id = BudgetThread.allEntryId} ) {
+  void _notifyUpdated({required BudgetEntry entry, Id? id = BudgetThread.allEntryId} ) {
     ref.read(budgetThreadProviderProvider.notifier).updateThreadMeta(entry.thread.value?.id, entry);
     ref.read(budgetEntriesProviderProvider(id).notifier)
-      .updateEntryforThread(entry);
+      .updateEntryforState(entry);
   }
+
+  void _notifyEntryRemoveFrom({Id? threadId, required BudgetEntry entry}) => 
+      ref.read(budgetThreadProviderProvider.notifier).removeThreadMeta(threadId, entry);
 
   Future<bool> createEntry(BudgetEntry entry) async {
     state = const AsyncLoading();
@@ -53,7 +56,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
       ref.read(budgetDatabaseProvider.future)
         .then((db) => db.createEntry(entry));
       
-      _notifyEntryAdd(entry: entry);
+      _notifyAdd(entry: entry);
       return [entry, ...copy]..sortByCreateTimeAsc();
     }, (_) => (success = false));
 
@@ -67,7 +70,6 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     bool success = true;
     state = await AsyncValue.guard(() async {
       final copy = state.value ?? await _fetchAllEntries();
-      final newThread = entry.thread.value;
 
       ref.read(budgetDatabaseProvider.future)
         .then((db) => db.updateEntry(entry));
@@ -75,13 +77,16 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
       copy.removeWhere((e) => e.id == entry.id);
 
       // need to notify thread provider from new thread to change the state
-      _notifyEntryUpdated(entry: entry);
-      if (newThread?.id != threadId) { 
-        _notifyEntryAdd(entry: entry, id: newThread?.id);
-        ref.read(budgetThreadProviderProvider.notifier).removeThreadMeta(threadId, entry);
-        return copy..sortByCreateTimeAsc();
-      }
-      return [entry, ...copy]..sortByCreateTimeAsc();
+      _notifyUpdated(entry: entry);
+
+      final newThread = entry.thread.value;
+      final threadUpdated = newThread?.id != threadId;
+      if (!threadUpdated) return [entry, ...copy]..sortByCreateTimeAsc();
+      
+      // thread change operation
+      _notifyAdd(entry: entry, id: newThread?.id);
+      _notifyEntryRemoveFrom(threadId: threadId, entry: entry);
+      return copy..sortByCreateTimeAsc();
     }, (err) => (success = false));
 
     ref.read(supabaseServiceProvider.notifier).updateEntry(entry);
@@ -98,7 +103,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
       ref.read(budgetDatabaseProvider.future)
         .then((db) => db.deleteEntry(entry));
 
-      _notifyEntryDelete(entry: entry);
+      _notifyDelete(entry: entry);
       copy.removeWhere((e) => e.id == entry.id);
       return copy..sortByCreateTimeAsc();
     }, (_) => (success = false));
@@ -116,7 +121,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
       ref.read(budgetDatabaseProvider.future)
         .then((db) => db.deleteEntry(entry));
 
-      _notifyEntryDelete(entry: entry);
+      _notifyDelete(entry: entry);
       copy.removeWhere((e) => e.id == entry.id);
       return copy..sortByCreateTimeAsc();
     }, (_) => (success = false));
@@ -125,17 +130,18 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     return success;
   }
 
-  Future<bool> addEntrytoThread(BudgetEntry entry) async {
+  Future<bool> addEntryToThread(BudgetEntry entry) async {
     Log().log("Adding entry to Thread $threadId");
-    if (threadId == null) return false;
+    if (threadId == null) return await updateEntry(entry);
+
     final db = await ref.read(budgetDatabaseProvider.future);
     final thread = await db.getThread(threadId!);
     entry.thread.value = thread;
-    return await updateEntry(entry);
+    return await createEntry(entry);
   }
 
 // notifier
-  Future<void> addEntryToThread(BudgetEntry entry) async {
+  Future<void> addEntryToState(BudgetEntry entry) async {
     if (state.value == null) return;
     state = AsyncData(
       [entry, ...state.value!]
@@ -143,7 +149,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     );
   }
 
-  Future<void> removeEntryfromThread(BudgetEntry entry) async {
+  Future<void> removeEntryfromState(BudgetEntry entry) async {
     if (state.value == null) return;
     state = AsyncData(
       state.value!
@@ -152,7 +158,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     );
   }
   
-  Future<void> updateEntryforThread(BudgetEntry entry) async {
+  Future<void> updateEntryforState(BudgetEntry entry) async {
     if (state.value == null) return;
     state = AsyncData(
       [entry, ...state.value!
@@ -181,6 +187,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     return success;
   }
 
+// Exchange value in respect to state
   Future<double> _getExchangedTotal(List<BudgetEntry> entries) async {
     await ref.read(exchangeServiceProvider.future);
     double total = 0;

@@ -1,13 +1,12 @@
 import 'package:calendar/app.dart';
 import 'package:calendar/model/budget_schema.dart';
-import 'package:calendar/providers/budget_entry_provider.dart';
 import 'package:calendar/providers/budget_thread_provider.dart';
+import 'package:calendar/services/budget_database.dart';
 import 'package:calendar/services/provider_watcher.dart';
 import 'package:calendar/utils/const.dart';
 import 'package:calendar/utils/logger.dart';
 import 'package:calendar/utils/storage.dart';
 import 'package:calendar/utils/widget.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:home_widget/home_widget.dart';
@@ -49,23 +48,17 @@ Future<void> budgetWidgetCallback(Uri? data) async {
     if (data?.scheme != callbackPrefix.toLowerCase()) return;
     if (data?.host != sBudgetWidgetCallback.toLowerCase()) return;
 
-    // final storage = await LocalStorageManager.instance();
-    // final targetThreadId = storage.getTargetBudgetThread();
     final targetThreadId = await container.read(targetThreadProvider.future);
     
     // Initialize providers
-    await container.read(budgetThreadProviderProvider.future);
-    await container.read(budgetEntriesProviderProvider(targetThreadId).future);
-    final notifier = container.read(budgetEntriesProviderProvider(targetThreadId).notifier);
+    final db = await container.read(budgetDatabaseProvider.future);
+    final thread = targetThreadId == null ? null : await db.getThread(targetThreadId);
 
     // Process parameters
     if (data?.queryParameters[widgetBudgetValueQueryName] != null) {
       final value = double.parse(data!.queryParameters[widgetBudgetValueQueryName]!);
-      
-      // Get thread
-      final thread = await container.read(budgetThreadProviderProvider.future)
-          .then((threads) => threads.firstWhereOrNull((t) => t.id == targetThreadId));
-      
+
+      Log().log("Target Thread is ${thread?.threadName}");
       // Create and add entry
       final entry = BudgetEntry(
         price: LocalizedPrice(
@@ -75,9 +68,9 @@ Future<void> budgetWidgetCallback(Uri? data) async {
         threadParam: thread
       );
 
-      (thread == null) 
-      ? await notifier.createEntry(entry)
-      : await notifier.addEntrytoThread(entry);
+      Log().d("Entry Thread is ${entry.thread.value?.threadName}");
+
+      await db.createEntry(entry);
     }
   } catch (e, stack) {
     Log().e('Error in widget callback: $e\n$stack');
