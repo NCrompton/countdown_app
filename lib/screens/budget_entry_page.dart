@@ -106,7 +106,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
               ChangedValue(name: "Thread", oldValue: widget.thread?.threadName, newValue: newEntry.thread.value?.threadName),
             ],
             onConfirm:() async {
-              await _updateEntry(newEntry);
+              _updateEntry(newEntry);
               dismiss();
               if (context.mounted) {
                 Navigator.of(context).pop();
@@ -154,10 +154,8 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
   }
   
   Future<void> _deleteEntry() async {
-    final success = await ref.read(budgetEntriesProviderProvider(widget.thread?.id).notifier).deleteEntry(widget.entry);
-    if (mounted && success) {
-      Navigator.pop(context);
-    }
+    ref.read(budgetEntriesProviderProvider(widget.thread?.id).notifier).deleteEntry(widget.entry);
+    if (mounted) Navigator.pop(context);
   }
 
   /// Only react if provider state changes
@@ -231,7 +229,9 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
                                 flex: 1,
                                 child: CupertinoButton.filled(
                                   padding: const EdgeInsets.all(0),
-                                  onPressed: () => _buildPreview(() => Navigator.pop(context)),
+                                  onPressed: () => _buildPreview(() {
+                                    if (mounted) Navigator.pop(context);
+                                  }),
                                   child: const Text("Update"),
                                 ),
                               ),

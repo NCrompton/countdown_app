@@ -1,13 +1,13 @@
 import 'package:calendar/model/budget_schema.dart';
+import 'package:calendar/services/budget_service.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'budget_database.g.dart';
 
-// TODO: use riverpod provide the service, which the service will operate on db and stored value
 // TODO: provider should only work on state, service should work on data
 @riverpod
-class BudgetDatabase extends _$BudgetDatabase{
+class BudgetDatabase extends _$BudgetDatabase with BudgetModelService {
   late final Isar _isar;
 
   Future<Isar> _openConnection() async {
@@ -30,13 +30,14 @@ class BudgetDatabase extends _$BudgetDatabase{
     _isar = await _openConnection();
     return this;
   }
-} 
 
-extension BudgetThreadDatabase on BudgetDatabase {
+// Thread
+  @override
   Future<BudgetThread?> getThread(Id id) async {
     return await _isar.budgetThreads.get(id);
   }
 
+  @override
   Future<List<BudgetThread>> getAllThreads() async {
     return await threadQuery()
       .findAll();
@@ -48,18 +49,21 @@ extension BudgetThreadDatabase on BudgetDatabase {
     .enabledEqualTo(true)
     .build();
 
+  @override
   Future<Id> createThread(BudgetThread thread) async {
     return await _isar.writeTxn(() async {
       return await _isar.budgetThreads.put(thread);
     });
   }
 
+  @override
   Future<bool> updateThread(BudgetThread thread) async {
     return await _isar.writeTxn(() async {
       return await _isar.budgetThreads.put(thread) > 0;
     });
   }
 
+  @override
   Future<bool> deleteThread(BudgetThread thread) async {
     return await _isar.writeTxn(() async {
       thread.enabled = false;
@@ -72,6 +76,7 @@ extension BudgetThreadDatabase on BudgetDatabase {
     });
   }
 
+  @override
   Future<bool> hardDeleteThread(BudgetThread thread) async {
     return await _isar.writeTxn(() async {
       await thread.budgets.load();
@@ -109,13 +114,14 @@ extension BudgetThreadDatabase on BudgetDatabase {
       await entry.thread.value?.budgets.save();
     });
   }
-}
 
-extension BudgetEntryDatabase on BudgetDatabase {
+// Entry
+  @override
   Future<BudgetEntry?> getEntry(Id id) async {
     return _isar.budgetEntrys.get(id);
   }
 
+  @override
   Future<List<BudgetEntry>> getEntriesFromThread(Id? threadId) async {
     return await entriesQuery(threadId)
       .findAll()
@@ -136,6 +142,7 @@ extension BudgetEntryDatabase on BudgetDatabase {
       .build();
   }
 
+  @override
   Future<Id> createEntry(BudgetEntry entry) async {
     return await _isar.writeTxn(() async {
       final eid = await _isar.budgetEntrys.put(entry);
@@ -149,6 +156,7 @@ extension BudgetEntryDatabase on BudgetDatabase {
     });
   }
 
+  @override
   Future<bool> updateEntry(BudgetEntry entry) async {
     return await _isar.writeTxn(() async {
       final oldE = (await _isar.budgetEntrys.get(entry.id));
@@ -172,16 +180,18 @@ extension BudgetEntryDatabase on BudgetDatabase {
     });
   }
 
+  @override
   Future<bool> deleteEntry(BudgetEntry entry) async {
     return await _isar.writeTxn(() async {
       entry.enabled = false;
-      return await createEntry(entry) > 0;
+      return await _isar.budgetEntrys.put(entry) > 0;
     });
   }
   
-  Future<bool> hardDeleteEntry(Id id) async {
+  @override
+  Future<bool> hardDeleteEntry(BudgetEntry entry) async {
     return await _isar.writeTxn(() async {
-      return await _isar.budgetEntrys.delete(id);
+      return await _isar.budgetEntrys.delete(entry.id);
     });
   }
 
@@ -203,32 +213,36 @@ extension BudgetEntryDatabase on BudgetDatabase {
         await entry.thread.load();
     });
   }
-}
 
-extension BudgetEntryTypeDatabase on BudgetDatabase {
+// Entry Type
+  @override
   Future<BudgetEntryType?> getEntryType(Id id) async {
     return _isar.budgetEntryTypes.get(id);
   }
 
+  @override
   Future<List<BudgetEntryType>> getAllEntryTypes() async {
     return _isar.budgetEntryTypes.where().findAll();
   }
 
+  @override
   Future<Id> createEntryType(BudgetEntryType type) async {
     return await _isar.writeTxn(() async {
       return _isar.budgetEntryTypes.put(type);
     });
   }
 
+  @override
   Future<bool> updateEntryType(BudgetEntryType type) async {
     return await _isar.writeTxn(() async {
       return await _isar.budgetEntryTypes.put(type) > 0;
     });
   }
 
-  Future<bool> deleteEntryType(Id id) async {
+  @override
+  Future<bool> deleteEntryType(BudgetEntryType type) async {
     return await _isar.writeTxn(() async {
-      return await _isar.budgetEntryTypes.delete(id);
+      return await _isar.budgetEntryTypes.delete(type.id);
     });
   }
 }
