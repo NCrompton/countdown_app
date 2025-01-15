@@ -23,6 +23,8 @@ mixin BudgetModelService {
 
   Future<BudgetEntry?> getEntry(int id);
 
+  Future<List<BudgetEntry>> getEntries({int? threadId, int? page});
+
   Future<List<BudgetEntry>> getEntriesFromThread(int? threadId);
 
   Future<int> createEntry(BudgetEntry entry);

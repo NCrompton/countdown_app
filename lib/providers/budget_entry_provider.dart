@@ -11,10 +11,12 @@ part 'budget_entry_provider.g.dart';
 
 @riverpod
 class BudgetEntriesProvider extends _$BudgetEntriesProvider {
+  int page = 0;
+
   Future<List<BudgetEntry>> _fetchAllEntries() async {
     Log().log("refetching all entry from $threadId");
     return (await ref.read(budgetServiceProvider.future))
-      .getEntriesFromThread(threadId);
+      .getEntries(threadId: threadId, page: 0);
   }
 
   @override
@@ -23,11 +25,23 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     ref.keepAlive();
     ref.onDispose(() => Log().d("provider disposed"));
     
+    page = 1;
     return await _fetchAllEntries();
   }
 
   Function _factory(BudgetEntry entry) {
     return () => _notifyAllEntryAdd(entry);
+  }
+
+  Future<bool> paginateEntries() async {
+    if (state.isLoading) return false;
+    Log().log("paginating $page");
+    return await ref.read(budgetServiceProvider.future).then((db) async {
+      if (state.value != null && state.value!.length < page * 10) return true;
+      final entries = await db.getEntries(threadId: threadId, page: page++);
+      state = AsyncData([...state.value ?? [], ...entries]);
+      return entries.length != 10;
+    });
   }
 
   void _notifyAllEntryAdd(BudgetEntry entry) => 
@@ -76,7 +90,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
       
       _notifyAllEntryAdd(entry);
       _notifyThreadAdd(entry.thread.value?.id, entry);
-      return [entry, ...copy]..sortByCreateTimeAsc();
+      return [entry, ...copy]..sortByCreateTimeDsc();
     }, (_) => (success = false));
 
     ref.read(supabaseServiceProvider.notifier).saveEntry(entry);
@@ -102,14 +116,14 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
 
       final newThread = entry.thread.value;
       final threadUpdated = newThread?.id != threadId;
-      if (!threadUpdated) return [entry, ...copy]..sortByCreateTimeAsc();
+      if (!threadUpdated) return [entry, ...copy]..sortByCreateTimeDsc();
       
       // thread change operation
       _notifyAllEntryUpdate(entry);
       _notifyStateAdd(entry.thread.value?.id, entry);
       _notifyThreadAdd(entry.thread.value?.id, entry);
       _notifyThreadDelete(threadId, entry);
-      return copy..sortByCreateTimeAsc();
+      return copy..sortByCreateTimeDsc();
     }, (err) => (success = false));
 
     ref.read(supabaseServiceProvider.notifier).updateEntry(entry);
@@ -128,7 +142,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
 
       _notifyAllEntryDelete(entry);
       _notifyThreadDelete(entry.thread.value?.id, entry);
-      return copy..sortByCreateTimeAsc();
+      return copy..sortByCreateTimeDsc();
     });
 
     ref.read(supabaseServiceProvider.notifier).deleteEntry(entry.id);
@@ -145,7 +159,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
 
       _notifyAllEntryDelete(entry);
       _notifyThreadDelete(entry.thread.value?.id, entry);
-      return copy..sortByCreateTimeAsc();
+      return copy..sortByCreateTimeDsc();
     });
 
     ref.read(supabaseServiceProvider.notifier).deleteEntry(entry.id);
@@ -156,7 +170,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     if (state.value == null) return;
     state = AsyncData(
       [entry, ...state.value!]
-      ..sortByCreateTimeAsc()
+      ..sortByCreateTimeDsc()
     );
   }
 
@@ -165,7 +179,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     state = AsyncData(
       state.value!
       ..removeWhere((e) => e.id == entry.id)
-      ..sortByCreateTimeAsc()
+      ..sortByCreateTimeDsc()
     );
   }
   
@@ -174,7 +188,7 @@ class BudgetEntriesProvider extends _$BudgetEntriesProvider {
     state = AsyncData(
       [entry, ...state.value!
         ..removeWhere((e) => e.id == entry.id)]
-      ..sortByCreateTimeAsc()
+      ..sortByCreateTimeDsc()
     );
   }
 

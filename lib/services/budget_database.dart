@@ -123,23 +123,35 @@ class BudgetDatabase extends _$BudgetDatabase with BudgetModelService {
 
   @override
   Future<List<BudgetEntry>> getEntriesFromThread(Id? threadId) async {
-    return await entriesQuery(threadId)
+    return await _isar.budgetEntrys.filter()
+      .thread((t) => t.idEqualTo(threadId!)) // require condition to accept null value
       .findAll()
       ..forEach((e) async => await loadThread(e));
   }
 
-  Query<BudgetEntry> entriesQuery(Id? threadId) {
+  @override
+  Future<List<BudgetEntry>> getEntries({Id? threadId, int? page}) async {
+    return await entriesQuery(threadId, page)
+      .findAll()
+      ..forEach((e) async => await loadThread(e));
+  }
+
+  Query<BudgetEntry> entriesQuery(Id? threadId, int? page) {
     var query = _isar.budgetEntrys
+      .where()
       .filter()
       .enabledEqualTo(true);
-      if (threadId == null) {
-        query = query.threadIsNull();
-      } else if (threadId != BudgetThread.allEntryId) {
-        query = query.thread((t) => t.idEqualTo(threadId));
-      } 
-    return query
-      .sortByEntryTime()
-      .build();
+    if (threadId == null) {
+      query = query.threadIsNull();
+    } else if (threadId != BudgetThread.allEntryId) {
+      query = query.thread((t) => t.idEqualTo(threadId));
+    } 
+    final query2 = query.sortByEntryTimeDesc();
+    if (page != null) {
+      return query2.offset(page * 10).limit(10).build();
+    } else {
+      return query2.build();
+    }
   }
 
   @override

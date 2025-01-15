@@ -24,4 +24,8 @@ extension BudgetEntryListUtil on List<BudgetEntry> {
   void sortByCreateTimeAsc() {
     sort((a, b) => a.entryTime.compareTo(b.entryTime));
   }
+  
+  void sortByCreateTimeDsc() {
+    sort((a, b) => b.entryTime.compareTo(a.entryTime));
+  }
 }

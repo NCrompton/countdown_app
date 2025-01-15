@@ -31,7 +31,7 @@ class CountdownDateDetail extends ConsumerStatefulWidget {
       super.initState();
       updateInterval();
 
-      timer = Timer.periodic(const Duration(seconds: 10), (Timer t) => updateInterval());
+      timer = Timer.periodic(const Duration(seconds: 60), (Timer t) => updateInterval());
     }
 
     void updateInterval() {
@@ -79,13 +79,13 @@ class CountdownDateDetail extends ConsumerStatefulWidget {
                   ),
                   Container(
                     width: double.infinity, 
-                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: CupertinoButton.filled(
                       alignment: Alignment.bottomCenter,
                       onPressed: () async {
                         onLoading(context);
                         final success = await _deleteDate();
-                        if (mounted) {
+                        if (context.mounted) {
                           finishLoading(context);
                           if (success) {
                             Navigator.pop(context);
