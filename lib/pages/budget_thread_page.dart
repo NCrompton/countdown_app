@@ -96,6 +96,7 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
       valueListenable: _isByMonth,
       builder: (context, isByMonth, child) {
         return CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           controller: _scrollController,
           slivers: [
             CupertinoSliverRefreshControl(

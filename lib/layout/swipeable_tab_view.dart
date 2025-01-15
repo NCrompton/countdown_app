@@ -5,11 +5,13 @@ class SwipeableTabView extends StatefulWidget {
   final List<Widget> pages;
   final int initialPage;
   final List<String> tabNames;
+  final String title;
 
   const SwipeableTabView({
     super.key,
     required this.pages,
     required this.tabNames,
+    required this.title,
     int? initialPage,
   }):initialPage = initialPage ?? 0;
 
@@ -24,15 +26,15 @@ class _SwipeableTabViewState extends State<SwipeableTabView> with TickerProvider
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: widget.pages.length, vsync: this);
-    _tabController.index = widget.initialPage;
+    _tabController = TabController(
+      initialIndex: widget.initialPage, 
+      length: widget.pages.length, 
+      vsync: this
+    );
     _currentPage = _tabController.index;
     _tabController.addListener((){
-        setState(() {
-          _currentPage = _tabController.index;
-        });
-      }
-    );
+      setState(() => _currentPage = _tabController.index);
+    });
   }
 
   void _updateCurrentPage(int index) {
@@ -46,8 +48,8 @@ class _SwipeableTabViewState extends State<SwipeableTabView> with TickerProvider
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       resizeToAvoidBottomInset: false,
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('Budgets'),
+      navigationBar: CupertinoNavigationBar(
+        middle: Text(widget.title),
       ),
       child: SafeArea(
         child: _buildPageView(),
@@ -89,29 +91,42 @@ class PageIndicator extends StatelessWidget {
   final void Function(int) onUpdateCurrentPageIndex;
   final List<String> tabNames;
 
+  Widget get _leftIcon => (currentPageIndex > 0)
+            ? const Icon(
+              Icons.arrow_left_rounded,
+              size: 32.0,
+              color:  CupertinoColors.activeBlue)
+            : const Icon(
+              Icons.arrow_left_rounded,
+              size: 32.0,
+              color:  CupertinoColors.inactiveGray,
+            );
+
+  Widget get _rightIcon => (currentPageIndex < tabNames.length - 1)
+            ? const Icon(
+              Icons.arrow_right_rounded,
+              size: 32.0,
+              color:  CupertinoColors.activeBlue)
+            : const Icon(
+              Icons.arrow_right_rounded,
+              size: 32.0,
+              color:  CupertinoColors.inactiveGray,
+            );
+
   @override
   Widget build(BuildContext context) {
 
     return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: 
-      Row(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          IconButton(
-            splashRadius: 16.0,
-            padding: EdgeInsets.zero,
-            onPressed: () {
-              if (currentPageIndex == 0) {
-                return;
-              }
+          GestureDetector(
+            onTap: () {
+              if (currentPageIndex == 0) return;
               onUpdateCurrentPageIndex(currentPageIndex - 1);
             },
-            icon: Icon(
-              Icons.arrow_left_rounded,
-              size: 32.0,
-              color: (currentPageIndex > 0) ? CupertinoColors.activeBlue : CupertinoColors.inactiveGray,
-            ),
+            child: _leftIcon,
           ),
           SizedBox(
             height: 24,
@@ -121,20 +136,12 @@ class PageIndicator extends StatelessWidget {
               children: tabNames.map((e) => Center(child: Text(e, style: const TextStyle(fontSize: 18),))).toList(),
             )
           ),
-          IconButton(
-            splashRadius: 16.0,
-            padding: EdgeInsets.zero,
-            onPressed: () {
-              if (currentPageIndex == tabNames.length - 1) {
-                return;
-              }
+          GestureDetector(
+            onTap: () {
+              if (currentPageIndex == tabNames.length - 1) return;
               onUpdateCurrentPageIndex(currentPageIndex + 1);
             },
-            icon: Icon(
-              Icons.arrow_right_rounded,
-              size: 32.0,
-              color: (currentPageIndex < tabNames.length - 1) ? CupertinoColors.activeBlue : CupertinoColors.inactiveGray,
-            ),
+            child: _rightIcon,
           ),
         ],
       ),

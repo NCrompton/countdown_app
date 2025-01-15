@@ -30,6 +30,7 @@ class ListCell extends StatelessWidget{
   Widget? _trailing() {
     if (rightWidget == null && onTap == null) return null;
     return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
         rightWidget ?? const SizedBox(),
         if (rightWidget != null) const SizedBox(width: 8),
@@ -38,16 +39,37 @@ class ListCell extends StatelessWidget{
     );
   }
 
+  Widget? _center() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        leftWidget,
+        if (subLeftWidget != null) Transform.scale(alignment: Alignment.centerLeft, scale: 0.8, child: subLeftWidget!),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return CupertinoListTile(
-      padding: const EdgeInsets.all(16),
-      title: leftWidget,
-      subtitle: subLeftWidget,
-      leading: _leading,
-      leadingSize: 40,
-      trailing: _trailing(),
+    return GestureDetector(
       onTap: onTap,
+      child: Container(
+        decoration: const BoxDecoration(
+          border: Border.symmetric(horizontal: BorderSide(color: CupertinoColors.systemGrey, width: 0.1)),
+        ),
+        height: 70,
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (leading != null) _leading ?? const SizedBox.shrink(),
+            if (leading != null) const SizedBox(width: 16),
+            Expanded(child: _center() ?? const SizedBox.shrink()),
+            _trailing() ?? const SizedBox.shrink(),
+          ],
+        ),
+      ),
     );
   }
 }

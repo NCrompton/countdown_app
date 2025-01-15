@@ -18,7 +18,7 @@ class ProjectScaffold extends StatelessWidget {
       navigationBar: CupertinoNavigationBar(
         middle: Text(title),
       ),
-      child: Material(child: child),
+      child: child,
     );
   }
 }

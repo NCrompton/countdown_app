@@ -61,6 +61,7 @@ class BudgetThreadList extends ConsumerWidget {
                                       SwipeableTabView(
                                         pages: value.map((e) => BudgetThreadPage(thread: e)).toList(),
                                         tabNames: value.map((e) => e.threadName).toList(),
+                                        title: "Budgets",
                                         initialPage: i,
                                       ),
                                     ),
