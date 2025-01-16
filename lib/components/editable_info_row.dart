@@ -71,6 +71,7 @@ class _EntryAttributeRowState<T> extends State<EntryAttributeRow<T>> {
   Widget _buildDateTimeInputWidget() {
     return CupertinoDatePicker(
       mode: CupertinoDatePickerMode.dateAndTime,
+      initialDateTime: (widget.inputController as InputController<DateTime>).value,
       onDateTimeChanged: (widget.inputController as InputController<DateTime>).set,
     );
   }

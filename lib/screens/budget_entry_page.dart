@@ -17,6 +17,9 @@ class BudgetEntryPage extends ConsumerStatefulWidget {
 
   final BudgetEntry entry;
   BudgetThread? get thread => entry.thread.value;
+  int get entryTypeId => entry.entryType;
+  List<Currency> get currencyList => [entry.price.currency, 
+    ...Currency.values.toList()..remove(entry.price.currency)];
 
   @override
   ConsumerState<BudgetEntryPage> createState() => _BudgetEntryPageState();
@@ -160,9 +163,11 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
 
   /// Only react if provider state changes
   void initValue(List<BudgetEntryType> types, List<BudgetThread> threads) async {
-    typeList = types;
-    threadList = [null, ...threads];
-    _typeController.set(types[widget.entry.entryType]);
+    typeList = [types[widget.entryTypeId], 
+      ...types.toList()..removeWhere((e) => e.id == widget.entryTypeId)];
+    threadList = [widget.thread, 
+      ...[null, ...threads]..removeWhere((t) => t?.id == widget.thread?.id)];
+    _typeController.set(types[widget.entryTypeId]);
   }
 
 /// TODO: consider wrapping listenable to only its edit row widget
@@ -194,7 +199,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
                             ListenableBuilder(
                               listenable: _currencyController,
                               builder: (context, _) {
-                                return EntryAttributeRow<Currency>(attributeName: "Currency", attributeValueString: _currencyController.value.displayName.toUpperCase(), inputController: _currencyController, enumList:Currency.values);
+                                return EntryAttributeRow<Currency>(attributeName: "Currency", attributeValueString: _currencyController.value.displayName.toUpperCase(), inputController: _currencyController, enumList:widget.currencyList);
                               }
                             ),
                             ListenableBuilder(
@@ -244,7 +249,7 @@ class _BudgetEntryPageState extends ConsumerState<BudgetEntryPage> {
                                   padding: const EdgeInsets.all(0),
                                   color: CupertinoColors.destructiveRed,
                                   onPressed: showDeleteWarning,
-                                  child: const Text("Delete"),
+                                  child: const Text("Delete", style: TextStyle(color: Colors.white)),
                                 ),
                               ),
                             ]
@@ -366,14 +371,19 @@ class ChangedValuePreview extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                CupertinoButton.filled(
-                  onPressed: onConfirm,
-                  child: const Text("Confirm"),
+                Expanded(
+                  child: CupertinoButton.filled(
+                    onPressed: onConfirm,
+                    child: const Text("Confirm"),
+                  ),
                 ),
-                CupertinoButton(
-                  color: CupertinoColors.destructiveRed,
-                  onPressed: onReject,
-                  child: const Text("Reject"),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: CupertinoButton(
+                    color: CupertinoColors.destructiveRed,
+                    onPressed: onReject,
+                    child: const Text("Reject", style: TextStyle(color: Colors.white),),
+                  ),
                 ),
               ]
             ),
