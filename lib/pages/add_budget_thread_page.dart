@@ -89,8 +89,8 @@ class _AddBudgetThreadPageState extends ConsumerState<AddBudgetThreadPage> {
   @override
   Widget build(BuildContext context) {
     final provider = ref.watch(budgetThreadProviderProvider);
-    return  Padding(
-        padding: const EdgeInsets.all(20.0),
+    return Padding(
+        padding: const EdgeInsets.only(top: 20.0, left: 20.0, right: 20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -114,7 +114,7 @@ class _AddBudgetThreadPageState extends ConsumerState<AddBudgetThreadPage> {
                     ),
                   ),
                   _spacing,
-                   _buildPicker(
+                  _buildPicker(
                     text: _selectedCurrency.name.toUpperCase(), 
                     onPressed: _showCurrencyPicker, 
                     icon: CupertinoIcons.money_dollar
@@ -123,13 +123,14 @@ class _AddBudgetThreadPageState extends ConsumerState<AddBudgetThreadPage> {
               ),
             ),
             switch(provider) {
-              AsyncLoading() => const CupertinoButton.filled(
-                onPressed: null,
-                child: CircularProgressIndicator(), 
-              ),
-              _ => CupertinoButton.filled(
-                child: const Text('Done'),
-                onPressed: () => _submitBudgetThread(_threadNameController.text, _currencyController.text),
+              AsyncLoading() => const SizedBox.shrink(),
+              _ => Container(
+                color: CupertinoColors.systemBackground,
+                padding: const EdgeInsets.only(bottom: 8),
+                child: CupertinoButton.filled(
+                  child: const Text('Done'),
+                  onPressed: () => _submitBudgetThread(_threadNameController.text, _currencyController.text),
+                ),
               ),
             }
           ],
