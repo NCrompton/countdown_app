@@ -5,6 +5,7 @@ import 'package:calendar/pages/add_budget_entry_page.dart';
 import 'package:calendar/providers/budget_thread_provider.dart';
 import 'package:calendar/screens/budget_entry_page.dart';
 import 'package:calendar/providers/budget_entry_provider.dart';
+import 'package:calendar/utils/date_util.dart';
 import 'package:calendar/utils/route_transition.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,9 @@ class BudgetThreadPage extends ConsumerStatefulWidget {
   final BudgetThread? thread;
   const BudgetThreadPage({super.key, this.thread});
   int get notifierId => thread?.id ?? BudgetThread.allEntryId;
+  String? get periodString => (thread?.endDate == null && thread?.beginDate == null)
+    ? "Not yet begin"
+    : "${thread?.beginDate?.formatToShortDisplay()} - ${thread?.endDate?.formatToShortDisplay()}";
 
   @override
   ConsumerState<BudgetThreadPage> createState() => _BudgetThreadPageState();
@@ -27,6 +31,7 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
   DateFormat get formatter => _isByMonth.value ? DateFormat("MMM y") : DateFormat("dd MMM y");
   final ScrollController _scrollController = ScrollController();
   bool finishedPagination = false;
+  double totalPrice = 0;
   int page = 1;
 
   @override
@@ -107,6 +112,13 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
                 page = 1;
               }
             ),
+            if (widget.thread != null) 
+              SliverPersistentHeader(
+                delegate: MyHeaderDelegate(
+                  totalPrice: "HKD ${widget.thread?.totalPrice?.toStringAsFixed(2)}",
+                  periodString: "${widget.periodString}",
+                )
+              ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -147,7 +159,10 @@ class _BudgetThreadPageState extends ConsumerState<BudgetThreadPage> {
               }
             ),
             if (finishedPagination) const SliverToBoxAdapter(
-              child: Center(child: Text("End of Entries"))
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(child: Text("End", style: TextStyle(fontSize: 16, color: Colors.black54),))
+              )
             ),
           ],
         );
@@ -221,4 +236,57 @@ class BudgetEntryAddCell extends StatelessWidget {
       )
     );
   }
+}
+
+class MyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final String totalPrice;
+  final String periodString;
+
+  MyHeaderDelegate({
+    required this.totalPrice,
+    required this.periodString,
+  });
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      clipBehavior: Clip.hardEdge,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: maxExtent,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.bottomLeft,
+          end: Alignment.topRight,
+          colors: [
+            Colors.white,
+            Colors.blue,
+          ],
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(totalPrice, 
+            style: const TextStyle(
+              color: Colors.black54,
+              fontSize: 28,
+            ),
+          ),
+          SizedBox(height: 8 * (128 - shrinkOffset) / 80),
+          Text(periodString, style: const TextStyle(color: Colors.black54),),
+        ],
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => 128;
+
+  @override
+  double get minExtent => 64;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
+      true;
 }

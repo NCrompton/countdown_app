@@ -88,6 +88,16 @@ class BudgetDatabase extends _$BudgetDatabase with BudgetModelService {
     });
   }
 
+  @override
+  Future<List<LocalizedPrice>?> getAllPrice(Id threadId) async {
+    List<BudgetEntry>? list;
+    if (threadId == BudgetThread.allEntryId) {
+      list = await _isar.budgetEntrys.filter().enabledEqualTo(true).findAll();
+    }
+    list = (await _isar.budgetThreads.get(threadId))?.budgets.toList();
+    return list?.map((b) => b.price).toList();
+  }
+
   Future<void> saveEntryToThread(BudgetThread thread) async {
     return await _isar.writeTxn(() async {
       await thread.budgets.save();

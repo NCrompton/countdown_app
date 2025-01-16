@@ -19,6 +19,9 @@ class BudgetThread {
   @ignore
   bool isTarget = false;
 
+  @ignore
+  double? totalPrice;
+
   @Enumerated(EnumType.name)
   Currency preferredCurrency;
   /// sorted by entryTime in ascending order 
@@ -33,7 +36,7 @@ class BudgetThread {
 
   static const Id allEntryId = -1;
   static BudgetThread allEntry = BudgetThread(
-    threadName: "",
+    threadName: "All Entries",
     preferredCurrency: Currency.hkd,
   )..id = allEntryId;
 

@@ -19,6 +19,8 @@ mixin BudgetModelService {
 
   Future<bool> hardDeleteThread(BudgetThread thread);
 
+  Future<List<LocalizedPrice>?> getAllPrice(int threadId);
+
   // ENTRY
 
   Future<BudgetEntry?> getEntry(int id);

@@ -1,5 +1,6 @@
 import 'package:calendar/model/budget_schema.dart';
 import 'package:calendar/providers/budget_entry_provider.dart';
+import 'package:calendar/providers/total_price_provider.dart';
 import 'package:calendar/services/budget_service.dart';
 import 'package:calendar/services/supabase_service.dart';
 import 'package:calendar/utils/logger.dart';
@@ -19,8 +20,10 @@ class BudgetThreadProvider extends _$BudgetThreadProvider {
 
       final targetThreadId = await ref.read(targetThreadProvider.future);
 
+// TODO: Model should provide every value instead of state
       for (var t in threads) {
         t.isTarget = t.id == targetThreadId;
+        t.totalPrice = await ref.read(totalPriceProvider(t.id).future);
         _updateThreadPeriod(t);
       }
 

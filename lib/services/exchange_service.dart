@@ -10,6 +10,8 @@ typedef ExchangeModel = Map<Currency, double>;
 @Riverpod(keepAlive: true)
 class ExchangeService extends _$ExchangeService {
 
+  late ExchangeModel model;
+
   final _dio = Dio(
     BaseOptions(
       baseUrl: Endpoints.exchangeBaseUrl,
@@ -35,13 +37,15 @@ class ExchangeService extends _$ExchangeService {
 
   //TODO: change to keepAlive ref
   @override
-  Future<ExchangeModel> build() async {
-    return _fetchExchangeRate();
+  Future<ExchangeService> build() async {
+    ref.keepAlive;
+    
+    model = await _fetchExchangeRate();
+    return this;
   }
 
   double getExchangedPrice(LocalizedPrice price) {
-    final exchangeRate = state.value;
-    if (exchangeRate == null) return 0;
+    final exchangeRate = model;
 
     return price.value / exchangeRate[price.currency]! ; 
   }
