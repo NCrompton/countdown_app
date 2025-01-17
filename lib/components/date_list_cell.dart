@@ -40,8 +40,6 @@ class DateCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Duration origin = data.date.standardDifference(DateTime.now());
-
     return Material(
         color: Colors.transparent,
         child: InkWell(
@@ -78,10 +76,11 @@ class DateCell extends StatelessWidget {
                     ),
                     ValueListenableBuilder<Duration>(
                       valueListenable: elapseController,
-                      builder: (context, elapse, child) {
-                        final i = data.date.isBefore(DateTime.now()) 
-                          ? DurationComponent(duration: origin - elapse)
-                          : DurationComponent(duration: origin + elapse);
+                      builder: (context, _, child) {
+                        final i = DurationComponent(duration: 
+                          data.date.isAfter(DateTime.now())
+                            ? data.date.difference(DateTime.now())
+                            : DateTime.now().difference(data.date));
                         return Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.center,
