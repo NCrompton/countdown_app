@@ -57,15 +57,24 @@ class DateCell extends StatelessWidget {
                 ),
                 Expanded(child: Column(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(data.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),),
-                        IconButton(
-                          icon: isTarget? const Icon(Icons.star) : const Icon(Icons.delete),
-                          onPressed: isTarget ? null : onDelete,
-                        ),
-                      ],
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0, right: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(data.name, 
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
+                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: isTarget ? null : onDelete,
+                            child: isTarget? const Icon(Icons.star, color: Colors.grey,) : const Icon(Icons.delete),
+                          )
+                        ],
+                      ),
                     ),
                     ValueListenableBuilder<Duration>(
                       valueListenable: elapseController,

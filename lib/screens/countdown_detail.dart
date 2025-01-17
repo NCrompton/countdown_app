@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:calendar/providers/date_provider.dart';
 import 'package:calendar/utils/date_util.dart';
-import 'package:calendar/utils/view_helper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -56,8 +55,8 @@ class CountdownDateDetail extends ConsumerStatefulWidget {
   Widget build(BuildContext context) {
 
     return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text(widget.countdown.name),
+      navigationBar: const CupertinoNavigationBar(
+        middle: Text("Date Detail"),
       ),
       child: SafeArea(
             child: Center(
@@ -68,6 +67,8 @@ class CountdownDateDetail extends ConsumerStatefulWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Text(widget.countdown.name, style: const TextStyle(fontSize: 32,), textAlign: TextAlign.center,),
+                        const SizedBox(height: 12,),
                         Text(isbeforeNow? "Since" : "To"),
                         Text(widget.countdown.date.formatToStandard()),
                         Text(
@@ -83,10 +84,8 @@ class CountdownDateDetail extends ConsumerStatefulWidget {
                     child: CupertinoButton.filled(
                       alignment: Alignment.bottomCenter,
                       onPressed: () async {
-                        onLoading(context);
                         final success = await _deleteDate();
                         if (context.mounted) {
-                          finishLoading(context);
                           if (success) {
                             Navigator.pop(context);
                           } 

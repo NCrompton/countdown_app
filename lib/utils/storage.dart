@@ -15,7 +15,8 @@ class LocalStorageManager {
   LocalStorageManager._({required SharedPreferencesWithCache pref}) : _pref = pref;
 
   static Future<LocalStorageManager> instance() async {
-    return _manager ?? LocalStorageManager._(pref: await getPref());
+    _manager = _manager ?? LocalStorageManager._(pref: await getPref());
+    return _manager!;
   }
 
   static Future<SharedPreferencesWithCache> getPref() async{
@@ -50,16 +51,19 @@ class LocalStorageManager {
   Future<void> setDateList(List<CountdownData> dateList) async {
     await _pref?.setStringList(dateListConfig, 
       dateList.map((e) => jsonEncode(e.toJson())).toList());
+    _pref?.reloadCache();
   }
 
   Future<void> setTargetDate(CountdownData? targetDate) async {
     if (targetDate == null) return _pref?.remove(targetDateConfig);
     await _pref?.setString(targetDateConfig, jsonEncode(targetDate.toJson()));
+    _pref?.reloadCache();
   }
 
   Future<void> setTargetBudgetThread(Id? id) async {
     if (id == null) return await _pref?.remove(targetThreadConfig);
     await _pref?.setInt(targetThreadConfig, id);
+    _pref?.reloadCache();
   }
 }
 

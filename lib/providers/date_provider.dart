@@ -1,4 +1,5 @@
 import 'package:calendar/model/countdown_data.dart';
+import 'package:calendar/utils/logger.dart';
 import 'package:calendar/utils/storage.dart';
 import 'package:calendar/utils/widget.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -39,8 +40,6 @@ class AsyncDateState extends _$AsyncDateState {
     });
   }
 
-
-
   Future<CountdownData?> _fetchTargetDate() async {
     final targetDate = await manager?.getTargetDate();
     return targetDate;
@@ -48,6 +47,7 @@ class AsyncDateState extends _$AsyncDateState {
 
   Future<List<CountdownData>> _fetchDateList() async {
     final dateList = await manager?.getDateList();
+    Log().log("Fetched in total ${dateList?.length} dates");
     return dateList ?? [];
   }
 
@@ -60,9 +60,7 @@ class AsyncDateState extends _$AsyncDateState {
   @override
   FutureOr<DateState> build() async { 
     manager = await LocalStorageManager.instance();
-    final dateList = await _fetchDateList();
-    final targetDate = await _fetchTargetDate();
-    return DateState(targetDate: targetDate, dateList: dateList);
+    return _fetchAll();
   }
   
   Future<CountdownData?> getTargetDate() async {
@@ -74,12 +72,12 @@ class AsyncDateState extends _$AsyncDateState {
     final targetDate = await getDateById(targetDateId);
     if (targetDate == null) return false; 
 
-    manager?.setTargetDate(targetDate);
+    (await LocalStorageManager.instance()).setTargetDate(targetDate);
 
     nativeWidgetManager.updateWidget(targetDate.date, targetDate.toString());
 
-    final data = await _fetchAll();
-    state = AsyncValue.data(data);
+    state = AsyncValue.data(
+      DateState(targetDate: targetDate, dateList: state.value?.dateList ?? []));
     return true;
   }
 
@@ -92,33 +90,36 @@ class AsyncDateState extends _$AsyncDateState {
   Future<void> addDate(CountdownData data) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final dateList = await _fetchDateList();
+      final dateList = state.value?.dateList.toList() ?? await _fetchDateList();
       final updatedList = [...dateList, data];
-      manager?.setDateList(updatedList);
-      return _fetchAll();
+      (await LocalStorageManager.instance()).setDateList(updatedList);
+      return DateState(targetDate: state.value?.targetDate, dateList: updatedList);
     });
   }
 
   Future<bool> removeDate(String id) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final dateList = await _fetchDateList();
-      final targetDate = await _fetchTargetDate();
+      final dateList = state.value?.dateList.toList() ?? await  _fetchDateList();
+      CountdownData? targetDate = await _fetchTargetDate();
 
-      if (targetDate?.id == id) removeTargetDate();
+      if (targetDate?.id == id) {
+        targetDate = null;
+        removeTargetDate();
+      }
 
-      final updatedList = [...dateList]..removeWhere(
+      final updatedList = dateList..removeWhere(
         (d) => d.id == id
       );
-      manager?.setDateList(updatedList);
-      return _fetchAll();
+      (await LocalStorageManager.instance()).setDateList(updatedList);
+      return DateState(targetDate: targetDate, dateList: updatedList);
     });
     return true;
   }
 
   void clearDates() async {
     state = const AsyncLoading();
-    manager?.setDateList([]);
+    (await LocalStorageManager.instance()).setDateList([]);
     final data = await _fetchAll();
     state = AsyncValue.data(data);
   }
@@ -137,7 +138,7 @@ class AsyncDateState extends _$AsyncDateState {
   }
 
   Future<CountdownData?> getDateById(String id) async {
-    final dateList = await _fetchDateList();
+    final dateList = state.value?.dateList ?? await _fetchDateList();
     final updatedList = dateList.firstWhereOrNull(
       (d) => d.id == id,
     );

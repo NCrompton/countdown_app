@@ -9,7 +9,6 @@ import 'package:calendar/pages/add_date.dart';
 import 'package:calendar/providers/tab_provider.dart';
 import 'package:calendar/screens/date_calculation_page.dart';
 import 'package:calendar/utils/route_transition.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,7 +61,7 @@ class _DateListPageState extends ConsumerState<DateListPage> with SingleTickerPr
     );
   }
 
-  void _deleteCell(String id) =>
+  void _deleteCell(String id) => 
     ref.read(asyncDateStateProvider.notifier).removeDate(id);
 
   void _setAsTargetDate(String id) =>
@@ -83,26 +82,26 @@ class _DateListPageState extends ConsumerState<DateListPage> with SingleTickerPr
                     onRefresh: () =>
                       ref.refresh(asyncDateStateProvider.future)
                   ),
-                  SliverToBoxAdapter(
-                    child: switch(dateState) {
-                      AsyncData(:final value) => 
-                      (value.dateList.isEmpty) 
-                        ? const SizedBox() 
-                        : CupertinoListSection(
-                            children: value.dateList.mapIndexed((index, countdownData) {
-                              return DateCell(
-                                data: countdownData,
-                                onStar: () => _setAsTargetDate(countdownData.id), 
-                                onDelete: () => _deleteCell(countdownData.id), 
-                                onTap: () => openPageSide(context, CountdownDateDetail(countdown: countdownData)),
-                                elapseController: _elapseController,
-                                isTarget: countdownData.id == targetDateId, 
-                              ); 
-                            }).toList(),
-                          ),
-                    _ => const CircularProgressIndicator(),
-                    },
-                  ),
+                  switch(dateState) {
+                    AsyncData(:final value) => 
+                    (value.dateList.isEmpty) 
+                      ? const SliverToBoxAdapter(child: SizedBox()) 
+                      : SliverList.builder(
+                          itemCount: value.dateList.length,
+                          itemBuilder: (context, index) {
+                            final countdownData = value.dateList[index];
+                            return DateCell(
+                              data: countdownData,
+                              onStar: () => _setAsTargetDate(countdownData.id), 
+                              onDelete: () => _deleteCell(countdownData.id), 
+                              onTap: () => openPageSide(context, CountdownDateDetail(countdown: countdownData)),
+                              elapseController: _elapseController,
+                              isTarget: countdownData.id == targetDateId, 
+                            ); 
+                          }
+                        ),
+                  _ => const SliverToBoxAdapter(child: SizedBox()),
+                  },
                 ],
               ),
             ),
