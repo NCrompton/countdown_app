@@ -19,8 +19,8 @@ const String widgetBudgetValueQueryName = "value";
 /* color */
 const int negativeColor = 0xffdd0000;
 const int positiveColor = 0xff00AA00; 
-const int beforeCountdownColor = negativeColor;
-const int afterCountdownColor = positiveColor; 
+const int beforeCountdownColor = positiveColor;
+const int afterCountdownColor = negativeColor; 
 
 /* feature flag */
 const bool customIntervalFormatEnable = false;
