@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class DateController with ChangeNotifier {
 
-  DateTime date = DateTime.now();
-
   DateController(this.date); 
+
+  DateTime date = DateTime.now();
 
   void changeDate(DateTime newDate) {
     date = newDate;
@@ -14,13 +14,14 @@ class DateController with ChangeNotifier {
 }
 
 class DateCalculatorController extends DateController{
+
+  DateCalculatorController(super.date, this.diff);
+  
   int diff = 0;
   DateTime get result => date.add(Duration(days: diff)); 
 
-  DateCalculatorController(super.date, this.diff);
-
-  void setNum(int newNum) {
-    this.diff = newNum;
+  void changeDiff(int diff) {
+    this.diff = diff;
     notifyListeners();
   }
 }

@@ -193,9 +193,9 @@ class FloatingBottomDrawerScaffold extends FloatingBottomDrawerWrapper {
                       resizeToAvoidBottomInset: false,
                       navigationBar: CupertinoNavigationBar(
                         middle: Text(title),
-                        trailing: IconButton(
-                          onPressed: visibilityController.toggleVisibility, 
-                          icon: Icon(visibilityController.visible ? Icons.close : Icons.add)
+                        trailing: GestureDetector(
+                          onTap: visibilityController.toggleVisibility, 
+                          child: Icon(visibilityController.visible ? Icons.close : Icons.add)
                         ),
                       ),
                       child: FloatingBottomDrawerPage(

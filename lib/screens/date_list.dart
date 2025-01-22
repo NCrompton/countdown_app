@@ -3,14 +3,11 @@ import 'dart:async';
 import 'package:calendar/components/date_list_cell.dart';
 import 'package:calendar/controllers/date_controller.dart';
 import 'package:calendar/controllers/view_provider.dart';
-import 'package:calendar/layout/floating_bottom_drawer.dart';
 import 'package:calendar/providers/date_provider.dart';
-import 'package:calendar/pages/add_date.dart';
 import 'package:calendar/providers/tab_provider.dart';
 import 'package:calendar/screens/date_calculation_page.dart';
 import 'package:calendar/utils/route_transition.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:calendar/screens/countdown_detail.dart';
 
@@ -124,11 +121,6 @@ class _DateListPageState extends ConsumerState<DateListPage> with SingleTickerPr
                 ),
               ),
             ),
-            FloatingBottomDrawer(
-              visibilityController: _visibilityController,
-              heightPortion: 0.5,
-              child: AddDatePage(dismiss: () => _visibilityController.setVisibility(false)), 
-            ),
           ],
         ),
       );
@@ -148,12 +140,8 @@ class _DateListPageState extends ConsumerState<DateListPage> with SingleTickerPr
                   onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
                   child: CupertinoPageScaffold(
                     resizeToAvoidBottomInset: false,
-                    navigationBar: CupertinoNavigationBar(
-                      middle: const Text('Target Date List'),
-                      trailing: IconButton(
-                        onPressed: _visibilityController.toggleVisibility, 
-                        icon: Icon(_visibilityController.visible ? Icons.close : Icons.add)
-                      ),
+                    navigationBar: const CupertinoNavigationBar(
+                      middle: Text('Target Date List'),
                     ),
                     child: _buildBody(dateState),
                   )
