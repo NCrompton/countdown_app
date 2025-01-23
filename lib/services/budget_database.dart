@@ -9,10 +9,12 @@ part 'budget_database.g.dart';
 @riverpod
 class BudgetDatabase extends _$BudgetDatabase with BudgetModelService {
   late final Isar _isar;
+  BudgetDatabase? instance;
 
-  Future<Isar> _openConnection() async {
+  Future<void> _openConnection() async {
     final dir = await getApplicationDocumentsDirectory();
-    return await Isar.open(
+    _isar = Isar.getInstance() 
+    ?? await Isar.open(
       [
         BudgetThreadSchema, 
         BudgetEntrySchema, 
@@ -27,8 +29,11 @@ class BudgetDatabase extends _$BudgetDatabase with BudgetModelService {
     state = const AsyncLoading();
     ref.keepAlive();
     ref.onDispose(() => _isar.close);
-    _isar = await _openConnection();
-    return this;
+    if (instance == null) {
+      await _openConnection();
+      instance = this;
+    }
+    return instance!;
   }
 
 // Thread

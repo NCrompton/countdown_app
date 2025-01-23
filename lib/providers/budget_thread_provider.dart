@@ -103,10 +103,12 @@ class BudgetThreadProvider extends _$BudgetThreadProvider {
       state = const AsyncLoading();
       state = await AsyncValue.guard(() async {
         final copy = await _copyStateWithoutThread(thread);
+        final targetThread = await ref.read(targetThreadProvider.future);
 
         final success = await ref.read(budgetServiceProvider.future)
           .then((db) => db.deleteThread(thread));
         if (!success) throw ThreadNotAddError();
+        if (thread.id == targetThread) ref.read(targetThreadProvider.notifier).updateTargetThread(null);
 
         thread.budgets.forEach(_noitfyEntryDelete);
         
@@ -120,10 +122,12 @@ class BudgetThreadProvider extends _$BudgetThreadProvider {
       state = const AsyncLoading();
       state = await AsyncValue.guard(() async {
         final copy = await _copyStateWithoutThread(thread);
+        final targetThread = await ref.read(targetThreadProvider.future);
         
         final success = await ref.read(budgetServiceProvider.future)
           .then((db) => db.hardDeleteThread(thread));
         if (!success) throw ThreadNotAddError();
+        if (thread.id == targetThread) ref.read(targetThreadProvider.notifier).updateTargetThread(null);
 
         thread.budgets.forEach(_noitfyEntryDelete);
 
